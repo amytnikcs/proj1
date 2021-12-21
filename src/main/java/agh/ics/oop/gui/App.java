@@ -27,15 +27,22 @@ public class App extends Application{
     private formTextField poleTestowe2;
     private formTextField poleTestowe3;
     private formTextField poleTestowe4;
+    private boolean startMenu;
+    private Scene scene;
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Scene scene = new Scene(vBox, widowWidth, windowHeight);
+        if(startMenu)
+            scene = new Scene(vBox, widowWidth, windowHeight);
+        else
+            scene = new Scene(new Label("GAME"), widowWidth, windowHeight);
+
         primaryStage.setTitle("Project 1");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
     public void init(){
+        startMenu = true;
         widowWidth = 300;
         windowHeight = 600;
         vBox = new VBox(15);
@@ -60,6 +67,7 @@ public class App extends Application{
             startButton.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent event) {
+                    startMenu = false;
                     widowWidth = 600;
                     startButton.setVisible(false);
                 }
