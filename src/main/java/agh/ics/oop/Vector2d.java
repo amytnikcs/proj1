@@ -1,11 +1,13 @@
 package agh.ics.oop;
 
+import java.util.Objects;
+
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 public class Vector2d {
-    private Integer x;
-    private Integer y;
+    public Integer x; //public becouse MapVisualizer
+    public Integer y;
     public Vector2d(Integer x, Integer y){
         this.x = x;
         this.y = y;
@@ -16,10 +18,10 @@ public class Vector2d {
     }
 
     public boolean precedes(Vector2d other) { return this.x <= other.x && this.y <= other.y;}
-    public boolean follows(Vector2d other) { return this.x >= other.x && this.y >= other.y; }
+    public boolean follows(Vector2d other) { return this.x >= other.x && this.y >= other.y;}
+
     public boolean inside(Vector2d upperright, Vector2d lowerleft) {
-        if(precedes(upperright) && follows(lowerleft)) return true;
-        return false;
+        return precedes(upperright) && follows(lowerleft);
     }
 
     public Vector2d upperRight(Vector2d other){
@@ -45,5 +47,17 @@ public class Vector2d {
         if(this.x == that.x && this.y == that.y)
             return true;
         return false;
+    }
+
+    public Integer getX() {
+        return x;
+    }
+
+    public Integer getY(){
+        return y;
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.x, this.y);
     }
 }

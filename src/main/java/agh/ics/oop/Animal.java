@@ -1,21 +1,27 @@
 package agh.ics.oop;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class Animal {
-    private static Integer snackEnergy;
     private static Integer moveEnergy;
+    private final static GenesParser parser = new GenesParser();
     private Integer energy;
     private Vector2d position;
-
+    private IWorldMap map;
+    private List<IPositionChangeObserver> positions;
     private int[] genes;
     private MoveDirection[] translatedGenes; //32 geny
     private MapDirection orientation;
 
-    public Animal(Vector2d initialPosition, Integer energy, int[] genes){
+    public Animal(IWorldMap map, Vector2d initialPosition, Integer energy, int[] genes){
+        positions = new ArrayList<>();
+        this.map = map;
         this.position = initialPosition;
         this.energy = energy;
         this.genes = genes;
+        this.translatedGenes = parser.parse(this.genes);
         this.orientation = MapDirection.asignRandomDirection();
     }
 
@@ -32,13 +38,19 @@ public class Animal {
         };
     }
 
-    public void move(MoveDirection direction) { //czy move to tylko prosto i losowanie obrotu przed ruchem?
-        decreaseEnergy(); // nie tu energia zmniejsza się co dnia
+    public void move(){
+        switch (chooseDirection()) {
+            case HALF_RIGHT -> this.orientation = this.orientation.next();
 
-        switch (direction) {
-            case RIGHT ->  this.orientation = this.orientation.next();
+            case RIGHT ->  this.orientation = this.orientation.next().next();
 
-            case LEFT ->   this.orientation = this.orientation.previous();
+            case ONE_AND_HALF_RIGHT -> this.orientation = this.orientation.next().next().next();
+
+            case HALF_LEFT -> this.orientation = this.orientation.previous();
+
+            case LEFT ->   this.orientation = this.orientation.previous().previous();
+
+            case ONE_AND_HALF_LEFT -> this.orientation = this.orientation.previous().previous().previous();
 
             case FORWARD -> {
                 updatePosition(this.position.add(this.orientation.toUnitVector()));
@@ -47,20 +59,33 @@ public class Animal {
             case BACKWARD -> {
                 updatePosition(this.position.subtract(this.orientation.toUnitVector()));
             }
-
-            case FORWARD_RIGHT -> this.orientation = this.orientation.next();
-
-            case FORWARD_LEFT -> updatePosition(this.position.add(this.orientation.toUnitVector()));
-
-            case BACKWARD_LEFT -> updatePosition(this.position.subtract(this.orientation.toUnitVector()));
-
-            case BACKWARD_RIGHT -> updatePosition(this.position.subtract(this.orientation.toUnitVector()));
         }
     }
 
-    private void decreaseEnergy(){
-        energy -= moveEnergy;
-        checkIfAnimalIsAlive();
+    private MoveDirection chooseDirection(){
+        Random random = new Random();
+        return translatedGenes[random.nextInt(32)];
+    }
+
+    private void positionChanged(Vector2d oldPosition, Vector2d newPosition){
+        for(IPositionChangeObserver observer : this.positions){
+            observer.positionChanged(oldPosition, newPosition, this);
+        }
+    }
+
+    public void updatePosition(Vector2d newPosition){
+        if(this.map.canMoveTo(newPosition)){
+            positionChanged(this.position,newPosition);
+            this.position = newPosition;
+        }
+    }
+
+    public void addObserver(IPositionChangeObserver observer){
+        positions.add(observer);
+    }
+
+    public void removeObserver(IPositionChangeObserver observer){
+        positions.remove(observer);
     }
 
     private void checkIfAnimalIsAlive(){
@@ -70,25 +95,29 @@ public class Animal {
         }
     }
 
-    public void updatePosition(Vector2d newPosition){
-        this.position = newPosition;
+
+    public void eat(int plantEnergy){
+        this.energy += plantEnergy;
     }
 
-    public void eat(){
-        this.energy += snackEnergy;
+    public void decreaseEnergy(){
+        energy -= moveEnergy;
+        checkIfAnimalIsAlive();
     }
 
     //public Animal breed(Animal SecondParent){
         //return new Animal();
     //}
+
     public void setMoveEnergy(int moveEnergy){
         this.moveEnergy = moveEnergy;
-    }
-    public void setSnackEnergy(int snackEnergy){
-        this.snackEnergy = snackEnergy;
     }
 
     public Integer getEnergy(){
         return this.energy;
+    }
+
+    public Vector2d getPosition(){
+        return this.position;
     }
 }
