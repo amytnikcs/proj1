@@ -7,9 +7,7 @@ import static java.lang.System.out;
 
 public class World {
     public static void main(String[] args){
-        GenesSoup genesSoup = new GenesSoup();
-        Vector2d position = new Vector2d(1,1);
-        SimulationEngine engine = new SimulationEngine(100,1,10,10,10,10,0.5);
+        SimulationEngine engine = new SimulationEngine(1122,2,2,110,10,10,0.5);
 
         /*try {
            out.println("system wystartował");

@@ -1,28 +1,23 @@
 package agh.ics.oop;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import static java.lang.Math.sqrt;
-import static java.lang.System.out;
 
-public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver {
-    java.util.Comparator<Vector2d> Comparator = new Comparator<Vector2d>() {
+public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver,IAnimalDeathObserver {
+    /*java.util.Comparator<Vector2d> Comparator = new Comparator<Vector2d>() {
         @Override
         public int compare(Vector2d firstPosition, Vector2d secondPosition) {
           if(firstPosition.getX() != (secondPosition.getX()))
                 return firstPosition.getX().compareTo(secondPosition.getX());
             return firstPosition.getY().compareTo(secondPosition.getY());
         }
-    };
+    };*/
 
     private Map<Vector2d, MapField> activeMapFields = new HashMap<>();
-    private Set<Vector2d> positionsWithAnimals = new TreeSet<>(Comparator);
-    private Set<Vector2d> freeJungleFields = new TreeSet<>(Comparator);
-    private Set<Vector2d> freeSawannaFields = new TreeSet<>(Comparator);
+    private Set<Vector2d> freeJungleFields = new HashSet<Vector2d>();
+    private Set<Vector2d> freeSawannaFields = new HashSet<Vector2d>();
+    private List<IAnimalDeathObserver> deathObservers;
 
     private int width;
     private int height;
@@ -42,6 +37,8 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver {
     private double areaPart;
 
     public BoundedWorldMap(int width, int height, double jungleRatio){
+        this.deathObservers = new ArrayList<>();
+
         this.jungleRatio = jungleRatio;
         this.width = width;
         this.height = height;
@@ -77,18 +74,21 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver {
 
     public boolean place(Animal animal) {
         Vector2d position = animal.getPosition();
+
         if(activeMapFields.get(position) == null) {
             MapField field = new MapField(position);
             activeMapFields.put(position, field);
-            field.addObserver(this);
+            field.addObserverPosition(this);
+            field.addObserverDeath(this);
         }
+
         activeMapFields.get(position).addAnimal(animal);
-        positionsWithAnimals.add(position);
-        if(inJungle(position))
+
+        if(inJungle(position)) // zastanow sie zy napewno tego chcesz
             freeJungleFields.remove(position);
         else
             freeSawannaFields.remove(position);//to mozna ifem ogarnac ktoro wykonac po pozycj
-                                                        // jak okrasle pozycje jungli
+                                               // jak okrasle pozycje jungli
         return true;
     }
 
@@ -109,32 +109,10 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver {
         return activeMapFields.get(position);
     }
 
-    public void moveAnimals(){
-        for(Vector2d position : positionsWithAnimals)
-            activeMapFields.get(position).moveAnimals();
-    }
-
     @Override
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition, Animal animal) {
-        if(activeMapFields.get(oldPosition).containAnimals()){//po prostu przesuwam zwierzę na nowe pole
-            place(animal);
-        }
-        else{
-            positionsWithAnimals.remove(oldPosition); // jezeli na danym polu nie ma zwierzat
-            //usuwam je z listy pól ze zwierzętami
-            place(animal);
-            if(!activeMapFields.get(oldPosition).containsGrass()){ //jeżeli obiekt nie trzyma ani zwierząt ani
-                // trawy to nie jest nam potrzebny
-                //activeMapFields.get(oldPosition).removeObserver(this);
-                activeMapFields.remove(oldPosition);
-            }
-        }
-
-    }
-
-    public void checkWhoEats(){
-        for(Vector2d position : positionsWithAnimals)
-            activeMapFields.get(position).eat();
+        place(animal);
+        freeField(oldPosition);
     }
 
     public String toString (){
@@ -144,6 +122,115 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver {
 
     public boolean inJungle(Vector2d position){//zakladajac ze dziala ok musze to napisac
         return position.inside(jungleTopCorner,jungleBottomCorner);
+    }
+
+    public void eatGrass(){
+        for (MapField field : activeMapFields.values()) {
+            field.eat();
+        }
+    }
+
+    public void breedAnimals(){
+        for (MapField field : activeMapFields.values()) {
+            field.breed();
+        }
+    }
+
+    public void freeField(Vector2d position){
+        if(!activeMapFields.get(position).containAnimals()){
+            if(!activeMapFields.get(position).containsGrass()){
+                if(inJungle(position))// jezeli nic tam nie stoi, ani nie rośnie no to znowu mogę dodac tam trawe
+                    freeJungleFields.add(position);
+                else
+                    freeSawannaFields.add(position);
+                activeMapFields.remove(position);
+            }
+        }
+    }
+
+    public void removeDeadAnimals(){
+        List<Vector2d> positions = new ArrayList<>();
+        for (Vector2d position : activeMapFields.keySet()) {
+            activeMapFields.get(position).whoDied();
+            positions.add(position);
+        }
+
+        for(Vector2d position : positions)
+            freeField(position);
+
+        System.out.println(activeMapFields);
+    }
+
+    @Override
+    public void animalDied(Animal animal) {
+        for(IAnimalDeathObserver observer : deathObservers)
+            observer.animalDied(animal);
+    }
+
+    public void addObserverDeath(IAnimalDeathObserver Observer){
+        deathObservers.add(Observer);
+    }
+
+    public void removeObserverDeath(IAnimalDeathObserver Observer){
+        deathObservers.remove(Observer);
+    }
+
+
+
+    public void spawnGrass(){
+        if(freeSawannaFields.size() != 0)
+            spawnSawannaGrass();
+        if(freeJungleFields.size() != 0)
+            spawnJungleGrass();
+    }
+
+    public void spawnSawannaGrass(){
+        int size = freeSawannaFields.size();
+        Random random = new Random();
+        int desiredPositionInSet = random.nextInt(size);
+        int i = 0;
+        Vector2d position = new Vector2d(0,0);
+        Iterator<Vector2d> it = freeSawannaFields.iterator();
+        while(it.hasNext() ) {
+            i++;
+            position = it.next();
+            if(i == desiredPositionInSet){
+                break;
+            }
+        }
+        freeSawannaFields.remove(position);
+        if(activeMapFields.get(position) == null) {
+            MapField field = new MapField(position);
+            activeMapFields.put(position, field);
+            field.addObserverPosition(this);
+            field.addObserverDeath(this);
+        }
+        activeMapFields.get(position).growGrass();
+    }
+
+    public void spawnJungleGrass(){
+        int size = freeJungleFields.size();
+        Random random = new Random();
+        int desiredPositionInSet = random.nextInt(size);
+        int i = 0;
+        Vector2d position = new Vector2d(0,0);
+        Iterator<Vector2d> it = freeJungleFields.iterator();
+        while(it.hasNext() ) {
+            i++;
+            position = it.next();
+            if(i == desiredPositionInSet){
+                break;
+            }
+        }
+
+        freeJungleFields.remove(position);
+        if(activeMapFields.get(position) == null) {
+            MapField field = new MapField(position);
+            activeMapFields.put(position, field);
+            field.addObserverPosition(this);
+            field.addObserverDeath(this);
+        }
+        activeMapFields.get(position).growGrass();
     }
 
     private double partOfArea(){

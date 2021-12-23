@@ -75,8 +75,9 @@ public class Animal {
 
     public void updatePosition(Vector2d newPosition){
         if(this.map.canMoveTo(newPosition)){
-            positionChanged(this.position,newPosition);
+            Vector2d OldPosition = this.position;
             this.position = newPosition;
+            positionChanged(OldPosition, newPosition);
         }
     }
 
@@ -88,21 +89,12 @@ public class Animal {
         positions.remove(observer);
     }
 
-    private void checkIfAnimalIsAlive(){
-        if(energy <= 0){
-            System.out.println("Animal at position: " + position.toString() + " died.");
-            //add death proces
-        }
-    }
-
-
     public void eat(int plantEnergy){
         this.energy += plantEnergy;
     }
 
     public void decreaseEnergy(){
-        energy -= moveEnergy;
-        checkIfAnimalIsAlive();
+        this.energy -= this.moveEnergy;
     }
 
     //public Animal breed(Animal SecondParent){
