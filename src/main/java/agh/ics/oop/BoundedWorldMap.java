@@ -4,7 +4,7 @@ import java.util.*;
 
 import static java.lang.Math.sqrt;
 
-public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnimalLifeCycleObserver {
+public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnimalLifeCycleObserver,IGrassEatenObserver {
     /*java.util.Comparator<Vector2d> Comparator = new Comparator<Vector2d>() {
         @Override
         public int compare(Vector2d firstPosition, Vector2d secondPosition) {
@@ -35,10 +35,11 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnim
     private Vector2d jungleTopCorner;
     private Vector2d jungleBottomCorner;
     private double areaPart;
+    private int grassNumber;
 
     public BoundedWorldMap(int width, int height, double jungleRatio){
         this.animalLifeCycleObservers = new ArrayList<>();
-
+        this.grassNumber = 0;
         this.jungleRatio = jungleRatio;
         this.width = width;
         this.height = height;
@@ -79,7 +80,8 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnim
             MapField field = new MapField(position);
             activeMapFields.put(position, field);
             field.addObserverPosition(this);
-            field.addObserverDeath(this);
+            field.addObserverLifeCycle(this);
+            field.addObserverGrass(this);
         }
 
         activeMapFields.get(position).addAnimal(animal);
@@ -206,8 +208,10 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnim
             MapField field = new MapField(position);
             activeMapFields.put(position, field);
             field.addObserverPosition(this);
-            field.addObserverDeath(this);
+            field.addObserverLifeCycle(this);
+            field.addObserverGrass(this);
         }
+        grassNumber++;
         activeMapFields.get(position).growGrass();
     }
 
@@ -231,8 +235,10 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnim
             MapField field = new MapField(position);
             activeMapFields.put(position, field);
             field.addObserverPosition(this);
-            field.addObserverDeath(this);
+            field.addObserverLifeCycle(this);
+            field.addObserverGrass(this);
         }
+        grassNumber++;
         activeMapFields.get(position).growGrass();
     }
 
@@ -251,4 +257,12 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnim
     }
 
 
+    @Override
+    public void grassEaten() {
+        grassNumber--;
+    }
+
+    public int getGrassAmount(){
+        return grassNumber;
+    }
 }

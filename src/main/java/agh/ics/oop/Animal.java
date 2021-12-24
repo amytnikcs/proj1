@@ -15,8 +15,12 @@ public class Animal {
     private int[] genes;
     private MoveDirection[] translatedGenes; //32 geny
     private MapDirection orientation;
+    private int livedDays;
+    private int numberOfChildren;
 
     public Animal(IWorldMap map, Vector2d initialPosition, Integer energy, int[] genes){
+        numberOfChildren = 0;
+        livedDays = 1;
         positions = new ArrayList<>();
         this.map = map;
         this.position = initialPosition;
@@ -80,6 +84,20 @@ public class Animal {
             this.position = newPosition;
             positionChanged(OldPosition, newPosition);
         }
+    }
+    public void anotherDayLived(){
+        livedDays++;
+    }
+    public int getLivedDays(){
+        return livedDays;
+    }
+
+    public void newChild(){
+        numberOfChildren++;
+    }
+
+    public int getNumberOfChildren(){
+        return numberOfChildren;
     }
 
     public void addObserver(IPositionChangeObserver observer){

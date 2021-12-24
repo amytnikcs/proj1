@@ -19,16 +19,26 @@ public class MapField implements IPositionChangeObserver{
     private int numberOfAnimals;
     private List<IPositionChangeObserver> animals;
     private List<IAnimalLifeCycleObserver> lifeCycleObservers;
+    private List<IGrassEatenObserver> grassEatenObservers;
 
     public static void setPlantEnergy(int plantEnergy) {
         MapField.plantEnergy = plantEnergy;
     }
 
     public MapField(Vector2d position){
+        this.grassEatenObservers = new ArrayList<>();
         this.lifeCycleObservers = new ArrayList<>();
         this.animals = new ArrayList<>();
         this.position = position;
         numberOfAnimals = 0;
+    }
+
+    public void addObserverGrass(IGrassEatenObserver Observer){
+        grassEatenObservers.add(Observer);
+    }
+
+    public void removeObserverGrass(IGrassEatenObserver Observer){
+        grassEatenObservers.remove(Observer);
     }
 
     public void addObserverPosition(IPositionChangeObserver Observer){
@@ -39,11 +49,11 @@ public class MapField implements IPositionChangeObserver{
         animals.remove(Observer);
     }
 
-    public void addObserverDeath(IAnimalLifeCycleObserver Observer){
+    public void addObserverLifeCycle(IAnimalLifeCycleObserver Observer){
         lifeCycleObservers.add(Observer);
     }
 
-    public void removeObserverDeath(IAnimalLifeCycleObserver Observer){
+    public void removeObserverLifeCycle(IAnimalLifeCycleObserver Observer){
         lifeCycleObservers.remove(Observer);
     }
 
@@ -108,6 +118,8 @@ public class MapField implements IPositionChangeObserver{
         notifyAboutBorn(child);
         firstParent.decreaseEnergy((int) (firstParent.getEnergy()*0.25));
         secondParent.decreaseEnergy((int) (secondParent.getEnergy()*0.25));
+        firstParent.newChild();
+        secondParent.newChild();
     }
 
     public void addAnimal(Animal animal){
@@ -160,6 +172,7 @@ public class MapField implements IPositionChangeObserver{
                 animal.eat(plantEnergy);
 
             }
+            notifyEatenGrass();
             this.grass = null;
         }
     }
@@ -192,6 +205,12 @@ public class MapField implements IPositionChangeObserver{
         System.out.println("Animal born at position: " + position.toString());
         for (IAnimalLifeCycleObserver observer : this.lifeCycleObservers) {
             observer.animalBorn(animal);
+        }
+    }
+
+    public void notifyEatenGrass(){
+        for (IGrassEatenObserver observer : this.grassEatenObservers) {
+            observer.grassEaten();
         }
     }
 
