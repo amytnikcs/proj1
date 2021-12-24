@@ -25,4 +25,5 @@ public class formTextField {
     public HBox getHBox() {
         return hBox;
     }
+    public TextField getTextField(){return textField;}
 }

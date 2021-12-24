@@ -6,6 +6,7 @@ import java.util.Random;
 
 public class Animal {
     private static Integer moveEnergy;
+    private static Integer startEnergy;
     private final static GenesParser parser = new GenesParser();
     private Integer energy;
     private Vector2d position;
@@ -93,8 +94,8 @@ public class Animal {
         this.energy += plantEnergy;
     }
 
-    public void decreaseEnergy(){
-        this.energy -= this.moveEnergy;
+    public void decreaseEnergy(int energy){
+        this.energy -= energy;
     }
 
     //public Animal breed(Animal SecondParent){
@@ -105,6 +106,8 @@ public class Animal {
         this.moveEnergy = moveEnergy;
     }
 
+    public void setStartEnergy(int startEnergy){this.startEnergy = startEnergy;}
+
     public Integer getEnergy(){
         return this.energy;
     }
@@ -112,4 +115,12 @@ public class Animal {
     public Vector2d getPosition(){
         return this.position;
     }
+
+    public int getStartEnergy(){return this.startEnergy;}
+
+    public IWorldMap getMap(){
+        return map;
+    }
+
+    public int[] getGenes(){return this.genes;}
 }

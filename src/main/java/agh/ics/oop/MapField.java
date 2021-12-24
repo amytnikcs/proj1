@@ -1,15 +1,12 @@
 package agh.ics.oop;
 
+import javax.swing.*;
 import java.util.*;
-
 
 public class MapField implements IPositionChangeObserver{
     Comparator<Animal> Comparator = new Comparator<Animal>() {
         @Override
         public int compare(Animal Sheldon, Animal Leonard) {
-            if(Leonard.getEnergy() == Sheldon.getEnergy())
-                if(!(Leonard == Sheldon))
-                    return -1;
             return Leonard.getEnergy().compareTo(Sheldon.getEnergy());
             }
         };
@@ -21,14 +18,14 @@ public class MapField implements IPositionChangeObserver{
     private Grass grass;
     private int numberOfAnimals;
     private List<IPositionChangeObserver> animals;
-    private List<IAnimalDeathObserver> deathObservers;
+    private List<IAnimalLifeCycleObserver> lifeCycleObservers;
 
     public static void setPlantEnergy(int plantEnergy) {
         MapField.plantEnergy = plantEnergy;
     }
 
     public MapField(Vector2d position){
-        this.deathObservers = new ArrayList<>();
+        this.lifeCycleObservers = new ArrayList<>();
         this.animals = new ArrayList<>();
         this.position = position;
         numberOfAnimals = 0;
@@ -42,18 +39,76 @@ public class MapField implements IPositionChangeObserver{
         animals.remove(Observer);
     }
 
-    public void addObserverDeath(IAnimalDeathObserver Observer){
-        deathObservers.add(Observer);
+    public void addObserverDeath(IAnimalLifeCycleObserver Observer){
+        lifeCycleObservers.add(Observer);
     }
 
-    public void removeObserverDeath(IAnimalDeathObserver Observer){
-        deathObservers.remove(Observer);
+    public void removeObserverDeath(IAnimalLifeCycleObserver Observer){
+        lifeCycleObservers.remove(Observer);
     }
 
     public void breed(){
-
+        if(numberOfAnimals < 2) return;
+        animalsOnField.sort(Comparator);
+        int FirstMaxEnergy = animalsOnField.getFirst().getEnergy();
+        int SecondMaxEnergy = animalsOnField.get(1).getEnergy();
+        if(FirstMaxEnergy < animalsOnField.getFirst().getStartEnergy()*0.5) return;
+        if(SecondMaxEnergy < animalsOnField.get(1).getStartEnergy()*0.5) return;
+        int animalsWithFirstMaxEnergy = 0, animalsWithSecondMaxEnergy = 0;
+        for(Animal animal : animalsOnField){
+            if(animal.getEnergy() == FirstMaxEnergy)
+                animalsWithFirstMaxEnergy++;
+            else if(animal.getEnergy() == SecondMaxEnergy)
+                animalsWithSecondMaxEnergy++;
+        }
+        Random random = new Random();
+        if(animalsWithFirstMaxEnergy >= 2){
+            int x = random.nextInt(animalsWithFirstMaxEnergy);
+            Animal firstParent = animalsOnField.get(x);
+            int y = random.nextInt(animalsWithFirstMaxEnergy);
+            while(y==x)
+                y = random.nextInt(animalsWithFirstMaxEnergy);
+            Animal secondParent = animalsOnField.get(x);
+            mating(firstParent, secondParent);
+        }
+        else{
+            Animal firstParent = animalsOnField.getFirst();
+            int x;
+            if(animalsWithSecondMaxEnergy >= 2) {
+                x = random.nextInt(animalsWithSecondMaxEnergy - 1) + 1; //bo nie moge wziac 0 elementu
+            }
+            else{
+                x = 1;
+            }
+            Animal secondParent = animalsOnField.get(x);
+            mating(firstParent, secondParent);
+        }
     }
 
+    public void mating(Animal firstParent, Animal secondParent){
+        int [] childGenes = new int[32];
+        Random random = new Random();
+        int [] firstParentGenes = firstParent.getGenes();
+        int [] secondParentGenes = secondParent.getGenes();
+        boolean rightSide = random.nextInt(1) == 0;
+        double sumOfEnergy = firstParent.getEnergy() + secondParent.getEnergy();
+        double genesFromFirstParent = firstParent.getEnergy() / sumOfEnergy;
+        double genesFromSecondParent = secondParent.getEnergy() / sumOfEnergy;
+        int firstParentGenesPart =  (int) Math.ceil(genesFromFirstParent * 32);
+        int secondParentGenesPart =  (int) Math.floor(genesFromSecondParent * 32);
+        if(rightSide){
+            for(int i = 0; i < 32; i++)
+            {childGenes[i] = i<secondParentGenesPart ? secondParentGenes[i] : firstParentGenes[i];}}
+        else{
+            for(int i = 0; i < 32; i++)
+            {childGenes[i] = i<firstParentGenesPart ? firstParentGenes[i] : secondParentGenes[i];}}
+        Animal child = new Animal(firstParent.getMap(), this.position, (int) (firstParent.getEnergy()*0.25 +
+                        secondParent.getEnergy()*0.25), childGenes);
+        addAnimal(child);
+        notifyAboutBorn(child);
+        firstParent.decreaseEnergy((int) (firstParent.getEnergy()*0.25));
+        secondParent.decreaseEnergy((int) (secondParent.getEnergy()*0.25));
+    }
 
     public void addAnimal(Animal animal){
         this.numberOfAnimals += 1;
@@ -109,10 +164,6 @@ public class MapField implements IPositionChangeObserver{
         }
     }
 
-    public String allAnimals(){
-        return animalsOnField.toString();
-    }
-
     public boolean containAnimals(){
         return numberOfAnimals > 0;
     }
@@ -132,8 +183,15 @@ public class MapField implements IPositionChangeObserver{
 
     public void notifyAboutDeath(Animal animal){
         System.out.println("Animal at position: " + position.toString() + " died.");
-        for (IAnimalDeathObserver observer : this.deathObservers) {
+        for (IAnimalLifeCycleObserver observer : this.lifeCycleObservers) {
             observer.animalDied(animal);
+        }
+    }
+
+    public void notifyAboutBorn(Animal animal){
+        System.out.println("Animal born at position: " + position.toString());
+        for (IAnimalLifeCycleObserver observer : this.lifeCycleObservers) {
+            observer.animalBorn(animal);
         }
     }
 

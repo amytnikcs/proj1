@@ -7,8 +7,8 @@ import static java.lang.System.out;
 
 public class World {
     public static void main(String[] args){
-        SimulationEngine engine = new SimulationEngine(1122,2,2,110,10,10,0.5);
-
+        SimulationEngine engine = new SimulationEngine(32,2,2,10,10,10,0.5, true);
+        engine.run();
         /*try {
            out.println("system wystartował");
             Application.launch(App.class);

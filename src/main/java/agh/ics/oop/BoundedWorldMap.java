@@ -4,7 +4,7 @@ import java.util.*;
 
 import static java.lang.Math.sqrt;
 
-public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver,IAnimalDeathObserver {
+public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnimalLifeCycleObserver {
     /*java.util.Comparator<Vector2d> Comparator = new Comparator<Vector2d>() {
         @Override
         public int compare(Vector2d firstPosition, Vector2d secondPosition) {
@@ -17,7 +17,7 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver,IAnima
     private Map<Vector2d, MapField> activeMapFields = new HashMap<>();
     private Set<Vector2d> freeJungleFields = new HashSet<Vector2d>();
     private Set<Vector2d> freeSawannaFields = new HashSet<Vector2d>();
-    private List<IAnimalDeathObserver> deathObservers;
+    private List<IAnimalLifeCycleObserver> animalLifeCycleObservers;
 
     private int width;
     private int height;
@@ -37,7 +37,7 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver,IAnima
     private double areaPart;
 
     public BoundedWorldMap(int width, int height, double jungleRatio){
-        this.deathObservers = new ArrayList<>();
+        this.animalLifeCycleObservers = new ArrayList<>();
 
         this.jungleRatio = jungleRatio;
         this.width = width;
@@ -93,7 +93,7 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver,IAnima
     }
 
     public boolean initialPlace(Animal animal){
-        if(activeMapFields.get(animal.getPosition()) != null)
+        if(activeMapFields.get(animal.getPosition()) != null && activeMapFields.get(animal.getPosition()).containAnimals())
             return false;
 
         place(animal);
@@ -157,24 +157,27 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver,IAnima
 
         for(Vector2d position : positions)
             freeField(position);
+    }
 
-        System.out.println(activeMapFields);
+    @Override
+    public void animalBorn(Animal animal) {
+        for(IAnimalLifeCycleObserver observer : animalLifeCycleObservers)
+            observer.animalBorn(animal);
     }
 
     @Override
     public void animalDied(Animal animal) {
-        for(IAnimalDeathObserver observer : deathObservers)
+        for(IAnimalLifeCycleObserver observer : animalLifeCycleObservers)
             observer.animalDied(animal);
     }
 
-    public void addObserverDeath(IAnimalDeathObserver Observer){
-        deathObservers.add(Observer);
+    public void addObserverDeath(IAnimalLifeCycleObserver Observer){
+        animalLifeCycleObservers.add(Observer);
     }
 
-    public void removeObserverDeath(IAnimalDeathObserver Observer){
-        deathObservers.remove(Observer);
+    public void removeObserverDeath(IAnimalLifeCycleObserver Observer){
+        animalLifeCycleObservers.remove(Observer);
     }
-
 
 
     public void spawnGrass(){

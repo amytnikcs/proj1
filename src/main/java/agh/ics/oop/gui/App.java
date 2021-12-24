@@ -62,14 +62,24 @@ public class App extends Application{
         vBox.getChildren().add(poleTestowe4.getHBox());
         vBox.getChildren().add(startButton);
         vBox.setAlignment(Pos.CENTER);
-
+        String[] text = {new String()};
+        int numberoutput = 10;
         try {
             startButton.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent event) {
+                    text[0] = poleTestowe.getTextField().getText();
+                    try {
+                        int number = Integer.parseInt(poleTestowe.getTextField().getText());
+                           //numberoutput = number;
+                    }catch(NumberFormatException numberFormatException){
+                        System.out.println("NOT A NUMBER");
+                    }
+                    System.out.println(numberoutput);
+
                     startMenu = false;
                     widowWidth = 600;
-                    startButton.setVisible(false);
+                    //startButton.setVisible(false);
                 }
             });
         }catch(IllegalThreadStateException ex){
