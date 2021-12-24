@@ -88,6 +88,7 @@ public class Animal {
     public void anotherDayLived(){
         livedDays++;
     }
+
     public int getLivedDays(){
         return livedDays;
     }
@@ -115,10 +116,6 @@ public class Animal {
     public void decreaseEnergy(int energy){
         this.energy -= energy;
     }
-
-    //public Animal breed(Animal SecondParent){
-        //return new Animal();
-    //}
 
     public void setMoveEnergy(int moveEnergy){
         this.moveEnergy = moveEnergy;

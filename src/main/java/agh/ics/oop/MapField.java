@@ -1,6 +1,5 @@
 package agh.ics.oop;
 
-import javax.swing.*;
 import java.util.*;
 
 public class MapField implements IPositionChangeObserver{
@@ -13,7 +12,6 @@ public class MapField implements IPositionChangeObserver{
 
     private static int plantEnergy;
     private LinkedList<Animal> animalsOnField = new LinkedList<>();
-    // private SortedSet<Animal> animalsOnField = new TreeSet<Animal>(Comparator);
     private Vector2d position;
     private Grass grass;
     private int numberOfAnimals;
@@ -165,12 +163,13 @@ public class MapField implements IPositionChangeObserver{
                 else
                     break;
             }
+
             int partOfEnergy = plantEnergy / foodContestingAnimals;
             for(Animal animal : animalsOnField){
                 if(foodContestingAnimals < 1)
                     break;
-                animal.eat(plantEnergy);
-
+                animal.eat(partOfEnergy);
+                foodContestingAnimals--;
             }
             notifyEatenGrass();
             this.grass = null;

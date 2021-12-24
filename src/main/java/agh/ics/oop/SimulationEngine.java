@@ -32,6 +32,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
         averageAnimalLiveSpan = 0;
         numberOfDeadAnimals = 0;
         animals = new ArrayList<>();
+        magicAnimals = new ArrayList<>();
         magicCounter = 0;
         this.isMagic = isMagic;
         this.startingEnergy = startingEnergy;
@@ -46,6 +47,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
         MapField mapField = new MapField(new Vector2d(0,0));
         mapField.setPlantEnergy(plantEnergy);
         map.addObserverDeath(this);
+
         //initialazing animals
         for(int i = 0; i < this.initialNumberOfAnimals; i++) {
             Animal animal = new Animal(map, genesSoup.placeOfRandomGenes(width, height),
@@ -63,14 +65,18 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
         System.out.println(map.toString());
 
         while(animals.size() > 0){
+            if(isMagic && animals.size() == 5) {
+                magicStateEnable();
+                if(wasItInMagicState)
+                    magicEvolution();
+            }
+
             map.removeDeadAnimals();
+
             if(wasItInMagicState && isMagic)
                 magicEvolution();
 
-            if(isMagic && animals.size() == 5) {
-                magicStateEnable();
-                magicEvolution();
-            }
+
 
             for(Animal animal : animals) {
                 animal.move();
@@ -79,6 +85,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
             map.eatGrass();
 
             map.breedAnimals();
+
             if(wasItInMagicState && isMagic)
                 magicEvolution();
 
@@ -134,7 +141,9 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
             wasItInMagicState = false;
             return;
         }
-        magicAnimals = animals;
+        magicAnimals.clear();
+        magicAnimals.addAll(animals);
+
         wasItInMagicState = true;
     }
 
@@ -161,6 +170,8 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
     }
 
     public void calculateAverageAnimalLiveSpan(int lifeSpan){
+        if(numberOfDeadAnimals == 0)
+            return;
         averageAnimalLiveSpan = (averageAnimalLiveSpan * (numberOfDeadAnimals - 1) + lifeSpan) / numberOfDeadAnimals;
     }
 
@@ -170,13 +181,16 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
         for(int i = 0; i<animals.size();i++) {
             int numberOfOccurences = 1;
             for (int j = i + 1; j < animals.size(); j++){
-                if (animals.get(i).getGenes().equals(animals.get(j).getGenes()))
+                if (Arrays.equals(animals.get(i).getGenes(), animals.get(j).getGenes()))
                     numberOfOccurences++;
             }
-            if(numberOfOccurences > maxNumberOfOccurences)
+            if(numberOfOccurences > maxNumberOfOccurences) {
+                maxNumberOfOccurences = numberOfOccurences;
                 dominantGenes = animals.get(i).getGenes();
+            }
         }
-
-        return dominantGenes;
+        if(maxNumberOfOccurences > 0)
+            return dominantGenes;
+        return null;
     }
 }

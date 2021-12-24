@@ -6,28 +6,28 @@ import static java.lang.Math.sqrt;
 
 public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnimalLifeCycleObserver,IGrassEatenObserver {
 
-    private Map<Vector2d, MapField> activeMapFields = new HashMap<>();
-    private Set<Vector2d> freeJungleFields = new HashSet<Vector2d>();
-    private Set<Vector2d> freeSawannaFields = new HashSet<Vector2d>();
-    private List<IAnimalLifeCycleObserver> animalLifeCycleObservers;
+    protected Map<Vector2d, MapField> activeMapFields = new HashMap<>();
+    protected Set<Vector2d> freeJungleFields = new HashSet<Vector2d>();
+    protected Set<Vector2d> freeSawannaFields = new HashSet<Vector2d>();
+    protected List<IAnimalLifeCycleObserver> animalLifeCycleObservers;
 
-    private int width;
-    private int height;
-    private double jungleRatio;
-    private Vector2d topCorner;
-    private Vector2d bottomCorner;
-    private int centreX;
-    private int centreY;
-    private int jungleWidth;
-    private int jungleHeight;
-    private int jungleTopCornerX;
-    private int jungleTopCornerY;
-    private int jungleBottomCornerX;
-    private int jungleBottomCornerY;
-    private Vector2d jungleTopCorner;
-    private Vector2d jungleBottomCorner;
-    private double areaPart;
-    private int grassNumber;
+    protected int width;
+    protected int height;
+    protected double jungleRatio;
+    protected Vector2d topCorner;
+    protected Vector2d bottomCorner;
+    protected int centreX;
+    protected int centreY;
+    protected int jungleWidth;
+    protected int jungleHeight;
+    protected int jungleTopCornerX;
+    protected int jungleTopCornerY;
+    protected int jungleBottomCornerX;
+    protected int jungleBottomCornerY;
+    protected Vector2d jungleTopCorner;
+    protected Vector2d jungleBottomCorner;
+    protected double areaPart;
+    protected int grassNumber;
 
     public BoundedWorldMap(int width, int height, double jungleRatio){
         this.animalLifeCycleObservers = new ArrayList<>();
@@ -105,6 +105,7 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnim
     public boolean isOccupied(Vector2d position) {
         return objectAt(position)!= null;
     }
+
     @Override
     public Object objectAt(Vector2d position) {
         return activeMapFields.get(position);
@@ -131,7 +132,6 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnim
         }
     }
 
-
     public void freeField(Vector2d position){
         if(!activeMapFields.get(position).containAnimals()){
             if(!activeMapFields.get(position).containsGrass()){
@@ -149,7 +149,6 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnim
             field.breed();
         }
     }
-
 
     public void removeDeadAnimals(){
         List<Vector2d> positions = new ArrayList<>();
@@ -205,51 +204,6 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnim
             }
         }
         freeFields.remove(position);
-        if(activeMapFields.get(position) == null) {
-            createMapField(position);
-        }
-        grassNumber++;
-        activeMapFields.get(position).growGrass();
-    }
-
-    public void spawnSawannaGrass(){
-        int size = freeSawannaFields.size();
-        Random random = new Random();
-        int desiredPositionInSet = random.nextInt(size);
-        int i = 0;
-        Vector2d position = new Vector2d(0,0);
-        Iterator<Vector2d> it = freeSawannaFields.iterator();
-        while(it.hasNext() ) {
-            i++;
-            position = it.next();
-            if(i == desiredPositionInSet){
-                break;
-            }
-        }
-        freeSawannaFields.remove(position);
-        if(activeMapFields.get(position) == null) {
-            createMapField(position);
-        }
-        grassNumber++;
-        activeMapFields.get(position).growGrass();
-    }
-
-    public void spawnJungleGrass(){
-        int size = freeJungleFields.size();
-        Random random = new Random();
-        int desiredPositionInSet = random.nextInt(size);
-        int i = 0;
-        Vector2d position = new Vector2d(0,0);
-        Iterator<Vector2d> it = freeJungleFields.iterator();
-        while(it.hasNext() ) {
-            i++;
-            position = it.next();
-            if(i == desiredPositionInSet){
-                break;
-            }
-        }
-
-        freeJungleFields.remove(position);
         if(activeMapFields.get(position) == null) {
             createMapField(position);
         }
