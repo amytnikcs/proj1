@@ -1,5 +1,8 @@
 package agh.ics.oop.gui;
 
+import agh.ics.oop.BoundedWorldMap;
+import agh.ics.oop.SimulationEngine;
+import agh.ics.oop.UnBoundedWorldMap;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -16,11 +19,17 @@ import javafx.stage.Stage;
 import static java.lang.System.out;
 
 public class App extends Application{
+
+    private SimulationEngine leftMapEngine;
+    private SimulationEngine rightMapEngine;
+    private UnBoundedWorldMap leftMap;
+    private BoundedWorldMap rightMap;
+
+    ///////////////////////////////////////////////////////////
     final double MAX_FONT_SIZE = 20.0;
     private int widowWidth;
     private int windowHeight;
     private VBox inputMenuVBox;
-    private HBox windowSimulation;
 
     private Label inputMenuName;
     private Label inputSetMapValues;
@@ -36,9 +45,6 @@ public class App extends Application{
     private Label inputLeftMapIsMagicLabel;
     private Label inputRightMapIsMagicLabel;
 
-    private Thread engineThreadForLeftMap;
-    private Thread engineThreadForRightMap;
-
     private formTextField widthTextField;
     private formTextField heightTextField;
     private formTextField jungleRatioTextField;
@@ -47,11 +53,16 @@ public class App extends Application{
     private formTextField plantEnergyTextField;
     private formTextField initialNumberOfAnimalsTextField;
     private formTextField initialRefreshTimeTextField;
-
     private Stage primaryStage;
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    private Thread engineThreadForLeftMap;
+    private Thread engineThreadForRightMap;
 
-    private boolean startMenu;
+    private HBox windowSimulation;
+
+
+
     private Scene scene;
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -64,24 +75,18 @@ public class App extends Application{
 
     public void init(){
         createOptionsMenu();
-        String[] text = {new String()};
-        int numberoutput = 10;
         try {
             startSimulationButton.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent event) {
-                    text[0] = widthTextField.getTextField().getText();
                     try {
                         int number = Integer.parseInt(widthTextField.getTextField().getText());
-                           //numberoutput = number;
                     }catch(NumberFormatException numberFormatException){
-                        System.out.println("NOT A NUMBER");
+                        System.out.println("ERROR 42: GIVEN VALUE IS NOT A NUMBER");
                     }
-                    System.out.println(numberoutput);
 
-                    widowWidth = 600;
                     disablePrimaryStage();
-                    showApplicatoinScreen();
+                    showApplicationScreen();
 
                 }
             });
@@ -91,19 +96,40 @@ public class App extends Application{
     }
 
 
+    public void createSimulationGUI(){
+        windowSimulation = new HBox();
+        windowSimulation.setMaxWidth(1200);
+        windowSimulation.setMaxHeight(652);
+        windowSimulation.getChildren().add(createLeftSide());
+        windowSimulation.getChildren().add(createRightSide());
+    }
 
+    public HBox createLeftSide(){
+        HBox verticalContainer = new HBox();
+        createGridPane(this.leftMap);
+        return verticalContainer;
+    }
+
+
+    public HBox createRightSide(){
+        HBox verticalContainer = new HBox();
+        createGridPane(this.rightMap);
+        return verticalContainer;
+    }
+
+    public void createGridPane(BoundedWorldMap map){
+
+    }
 
     public void disablePrimaryStage(){
         this.primaryStage.hide();
     }
 
-    public void showApplicatoinScreen(){
+    public void showApplicationScreen(){
+        createSimulationGUI();
         Stage simulationStage = new Stage();
         simulationStage.setTitle("Simulation window");
-        windowSimulation = new HBox();
-        Label label = new Label("Game is HERE");
-        windowSimulation.getChildren().add(label);
-        Scene scene = new Scene(windowSimulation, 1000, 650);
+        Scene scene = new Scene(windowSimulation, 1200, 650);
         simulationStage.setScene(scene);
         simulationStage.show();
     }
