@@ -193,4 +193,8 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
             return dominantGenes;
         return null;
     }
+
+    public List<Animal> getAnimals(){
+        return animals;
+    }
 }
