@@ -3,7 +3,7 @@ package agh.ics.oop;
 import java.util.Arrays;
 import java.util.List;
 
-public class dataTracker {
+public class DataTracker {
 
 
     private double averageAnimalLiveSpan;
@@ -11,7 +11,7 @@ public class dataTracker {
     private SimulationEngine engine;
     private BoundedWorldMap map;
 
-    public dataTracker(SimulationEngine engine,BoundedWorldMap map){
+    public DataTracker(SimulationEngine engine, BoundedWorldMap map){
         this.engine = engine;
         this.map = map;
         averageAnimalLiveSpan = 0;
@@ -61,4 +61,20 @@ public class dataTracker {
             return dominantGenes;
         return null;
     }
+
+    public void animalDied(Animal animal){
+        numberOfDeadAnimals++;
+        calculateAverageAnimalLiveSpan(animal.getLivedDays());
+    }
+
+    public void calculateAverageAnimalLiveSpan(int lifeSpan){
+        if(numberOfDeadAnimals == 0)
+            return;
+        averageAnimalLiveSpan = (averageAnimalLiveSpan * (numberOfDeadAnimals - 1) + lifeSpan) / numberOfDeadAnimals;
+    }
+
+    public double getAverageAnimalLiveSpan(){
+        return averageAnimalLiveSpan;
+    }
+
 }

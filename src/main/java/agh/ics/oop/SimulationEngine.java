@@ -21,7 +21,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
     private List<Animal> animals;
     private double averageAnimalLiveSpan;
     private int numberOfDeadAnimals;
-
+    private  DataTracker dataTracker;
 
     public SimulationEngine(Integer startingEnergy, Integer moveEnergy, Integer plantEnergy,
                             Integer initialNumberOfAnimals, Integer width, Integer height, double jungleRatio, boolean isMagic){
@@ -29,6 +29,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
             System.out.println("PRZEKROCZONO MAX ZWIERZAT");
             initialNumberOfAnimals = width * height;
         }
+
         averageAnimalLiveSpan = 0;
         numberOfDeadAnimals = 0;
         animals = new ArrayList<>();
@@ -59,6 +60,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
             } else
                 i -= 1;
         }
+        dataTracker = new DataTracker(this, map);
     }
 
     public void run(){
@@ -95,7 +97,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
             }
 
             map.spawnGrass();
-            System.out.println(Arrays.toString(findDominantGenes()));
+            System.out.println(dataTracker.getAverageAnimalLiveSpan());
             System.out.println(map.toString());
         }
     }
@@ -109,8 +111,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
 
     @Override
     public void animalDied(Animal animal) {
-        numberOfDeadAnimals++;
-        calculateAverageAnimalLiveSpan(animal.getLivedDays());
+        dataTracker.animalDied(animal);
         animals.remove(animal);
         if(animals.size() == 5 && isMagic)
             magicStateEnable();
@@ -145,53 +146,6 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
         magicAnimals.addAll(animals);
 
         wasItInMagicState = true;
-    }
-
-    public double calculateAverageChildren(){
-        double sum = 0;
-        if(animals.size() == 0)
-            return 0;
-        for(Animal animal : animals){
-            sum += animal.getNumberOfChildren();
-        }
-        sum /= animals.size();
-        return sum;
-    }
-
-    public double calculateAverageEnergy(){
-        double sum = 0;
-        if(animals.size() == 0)
-            return 0;
-        for(Animal animal : animals){
-            sum += animal.getEnergy();
-        }
-        sum /= animals.size();
-        return sum;
-    }
-
-    public void calculateAverageAnimalLiveSpan(int lifeSpan){
-        if(numberOfDeadAnimals == 0)
-            return;
-        averageAnimalLiveSpan = (averageAnimalLiveSpan * (numberOfDeadAnimals - 1) + lifeSpan) / numberOfDeadAnimals;
-    }
-
-    public int[] findDominantGenes(){
-        int[] dominantGenes = new int[32];
-        int maxNumberOfOccurences = 0;
-        for(int i = 0; i<animals.size();i++) {
-            int numberOfOccurences = 1;
-            for (int j = i + 1; j < animals.size(); j++){
-                if (Arrays.equals(animals.get(i).getGenes(), animals.get(j).getGenes()))
-                    numberOfOccurences++;
-            }
-            if(numberOfOccurences > maxNumberOfOccurences) {
-                maxNumberOfOccurences = numberOfOccurences;
-                dominantGenes = animals.get(i).getGenes();
-            }
-        }
-        if(maxNumberOfOccurences > 0)
-            return dominantGenes;
-        return null;
     }
 
     public List<Animal> getAnimals(){
