@@ -11,47 +11,40 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
     private Integer moveEnergy;
     private Integer plantEnergy;
     private Integer initialNumberOfAnimals;
-    private Integer width;
-    private Integer height;
-    private double jungleRatio;
     private BoundedWorldMap map;
     private GenesSoup genesSoup;
     private boolean isMagic;
     private List<Animal> magicAnimals;
     private List<Animal> animals;
-    private double averageAnimalLiveSpan;
-    private int numberOfDeadAnimals;
     private  DataTracker dataTracker;
 
     public SimulationEngine(Integer startingEnergy, Integer moveEnergy, Integer plantEnergy,
-                            Integer initialNumberOfAnimals, Integer width, Integer height, double jungleRatio, boolean isMagic){
-        if(initialNumberOfAnimals > width*height) {
-            System.out.println("PRZEKROCZONO MAX ZWIERZAT");
-            initialNumberOfAnimals = width * height;
-        }
+                            Integer initialNumberOfAnimals, boolean isMagic,
+                            BoundedWorldMap map){
+        this.map = map;
 
-        averageAnimalLiveSpan = 0;
-        numberOfDeadAnimals = 0;
+        if(initialNumberOfAnimals > map.getWidth()*map.getHeight()) {
+            System.out.println("PRZEKROCZONO MAX ZWIERZAT");
+            initialNumberOfAnimals = map.getWidth() * map.getHeight();
+        }
         animals = new ArrayList<>();
         magicAnimals = new ArrayList<>();
         magicCounter = 0;
         this.isMagic = isMagic;
+
         this.startingEnergy = startingEnergy;
         this.moveEnergy = moveEnergy;
         this.plantEnergy = plantEnergy;
         this.initialNumberOfAnimals = initialNumberOfAnimals;
-        this.width = width;
-        this.height = height;
-        this.jungleRatio = jungleRatio;
+
         genesSoup = new GenesSoup();
-        map = new BoundedWorldMap(this.width, this.height, this.jungleRatio);
         MapField mapField = new MapField(new Vector2d(0,0));
         mapField.setPlantEnergy(plantEnergy);
         map.addObserverDeath(this);
 
         //initialazing animals
         for(int i = 0; i < this.initialNumberOfAnimals; i++) {
-            Animal animal = new Animal(map, genesSoup.placeOfRandomGenes(width, height),
+            Animal animal = new Animal(map, genesSoup.placeOfRandomGenes(map.getWidth(), map.getHeight()),
                     startingEnergy, genesSoup.getRandomGenes());
             if (this.map.initialPlace(animal)) {
                 animals.add(animal);
@@ -78,8 +71,6 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
             if(wasItInMagicState && isMagic)
                 magicEvolution();
 
-
-
             for(Animal animal : animals) {
                 animal.move();
             }
@@ -97,7 +88,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
             }
 
             map.spawnGrass();
-            System.out.println(dataTracker.getAverageAnimalLiveSpan());
+            System.out.println(dataTracker.getHowMuchGrassOnMap());
             System.out.println(map.toString());
         }
     }
@@ -124,7 +115,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
         }
         System.out.println("It's a kind of magic");
         for(int i = 0; i < 5; i++){
-            Animal animal = new Animal(map, genesSoup.placeOfRandomGenes(width, height),
+            Animal animal = new Animal(map, genesSoup.placeOfRandomGenes(map.getWidth(), map.getHeight()),
                     startingEnergy, magicAnimals.get(i).getGenes());
             if(this.map.initialPlace(animal)){
                 animals.add(animal);

@@ -234,4 +234,11 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnim
     public int getGrassAmount(){
         return grassNumber;
     }
+
+    public int getWidth() {
+        return this.width;
+    }
+    public int getHeight() {
+        return this.height;
+    }
 }

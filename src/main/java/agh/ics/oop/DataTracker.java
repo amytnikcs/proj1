@@ -77,4 +77,7 @@ public class DataTracker {
         return averageAnimalLiveSpan;
     }
 
+    public int getHowMuchGrassOnMap() {
+        return map.getGrassAmount();
+    }
 }

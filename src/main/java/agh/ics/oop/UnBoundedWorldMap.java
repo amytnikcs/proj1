@@ -18,14 +18,14 @@ public class UnBoundedWorldMap extends BoundedWorldMap{
             if(position.getX() < bottomCorner.getX())
                 position.setX(topCorner.getX());
 
-            if(position.getX() > topCorner.getX())
+            else if(position.getX() > topCorner.getX())
                 position.setX(bottomCorner.getX());
 
             if(position.getY() < bottomCorner.getY())
-                position.setX(topCorner.getX());
+                position.setY(topCorner.getY());
 
-            if(position.getX() > topCorner.getX())
-                position.setX(bottomCorner.getX());
+            else if(position.getY() > topCorner.getY())
+                position.setY(bottomCorner.getY());
 
         }
         if(activeMapFields.get(position) == null) {
