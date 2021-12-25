@@ -7,8 +7,9 @@ import static java.lang.System.out;
 
 public class World {
     public static void main(String[] args){
-        //BoundedWorldMap map = new BoundedWorldMap(15,15,0.5);
-        //SimulationEngine engine = new SimulationEngine(100,3,5,30,true , map);
+        //UnBoundedWorldMap map = new UnBoundedWorldMap(5,5,0.5);
+        //SimulationEngine engine = new SimulationEngine(100,3,5,30,true
+        //        , map);
         //engine.run();
         try {
            out.println("system wystartował");

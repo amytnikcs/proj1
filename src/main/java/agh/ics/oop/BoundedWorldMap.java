@@ -241,4 +241,7 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnim
     public int getHeight() {
         return this.height;
     }
+    public Map<Vector2d, MapField> getActiveMapFields(){
+        return activeMapFields;
+    }
 }

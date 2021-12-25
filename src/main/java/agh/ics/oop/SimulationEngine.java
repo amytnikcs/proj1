@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class SimulationEngine implements IAnimalLifeCycleObserver {
+public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
     private int magicCounter;
     private boolean wasItInMagicState;
     private Integer startingEnergy;
@@ -23,7 +23,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver {
                             BoundedWorldMap map){
         this.map = map;
 
-        if(initialNumberOfAnimals > map.getWidth()*map.getHeight()) {
+        if(initialNumberOfAnimals > map.getWidth() * map.getHeight()) {
             System.out.println("PRZEKROCZONO MAX ZWIERZAT");
             initialNumberOfAnimals = map.getWidth() * map.getHeight();
         }

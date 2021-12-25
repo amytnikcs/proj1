@@ -1,24 +1,25 @@
 package agh.ics.oop.gui;
 
-import agh.ics.oop.BoundedWorldMap;
-import agh.ics.oop.SimulationEngine;
-import agh.ics.oop.UnBoundedWorldMap;
+import agh.ics.oop.*;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
+import java.util.Map;
+
 import static java.lang.System.out;
 
-public class App extends Application{
+public class App extends Application implements  IUpdateAnimalsSimulation{
 
     private SimulationEngine leftMapEngine;
     private SimulationEngine rightMapEngine;
@@ -51,17 +52,18 @@ public class App extends Application{
     private formTextField startEnergyTextField;
     private formTextField moveEnergyTextField;
     private formTextField plantEnergyTextField;
-    private formTextField initialNumberOfAnimalsTextField;
-    private formTextField initialRefreshTimeTextField;
+    private formTextField numberOfAnimalsTextField;
+    private formTextField refreshTimeTextField;
     private Stage primaryStage;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     private Thread engineThreadForLeftMap;
     private Thread engineThreadForRightMap;
 
+    private int simulationWidth = 1200;
+    private int simulationHeight = 750;
+
     private HBox windowSimulation;
-
-
 
     private Scene scene;
     @Override
@@ -80,7 +82,26 @@ public class App extends Application{
                 @Override
                 public void handle(ActionEvent event) {
                     try {
-                        int number = Integer.parseInt(widthTextField.getTextField().getText());
+                        int width = Integer.parseInt(widthTextField.getTextField().getText());
+                        int height = Integer.parseInt(heightTextField.getTextField().getText());
+                        int jungleRatio = Integer.parseInt(widthTextField.getTextField().getText());
+                        boolean isMagicLeft = inputLeftMapIsMagic.isSelected();
+                        boolean isMagicRight = inputRightMapIsMagic.isSelected();
+                        int startingEnergy = Integer.parseInt(startEnergyTextField.getTextField().getText());
+                        int moveEnergy = Integer.parseInt(moveEnergyTextField.getTextField().getText());
+                        int plantEnergy = Integer.parseInt(plantEnergyTextField.getTextField().getText());
+                        int numberOfAnimals = Integer.parseInt(numberOfAnimalsTextField.getTextField().getText());
+                        int refreshTime = Integer.parseInt(refreshTimeTextField.getTextField().getText());
+                        leftMap = new UnBoundedWorldMap(width,height,jungleRatio);
+                        leftMapEngine = new SimulationEngine(startingEnergy, moveEnergy, plantEnergy, numberOfAnimals,
+                                isMagicLeft , leftMap);
+                        engineThreadForLeftMap = new Thread(leftMapEngine);
+
+                        rightMap = new BoundedWorldMap(width,height,jungleRatio);
+                        rightMapEngine = new SimulationEngine(startingEnergy, moveEnergy, plantEnergy, numberOfAnimals,
+                                isMagicRight , rightMap);
+                        engineThreadForRightMap = new Thread(rightMapEngine);
+
                     }catch(NumberFormatException numberFormatException){
                         System.out.println("ERROR 42: GIVEN VALUE IS NOT A NUMBER");
                     }
@@ -97,28 +118,66 @@ public class App extends Application{
 
 
     public void createSimulationGUI(){
-        windowSimulation = new HBox();
-        windowSimulation.setMaxWidth(1200);
-        windowSimulation.setMaxHeight(652);
+        windowSimulation = new HBox(10);
+        windowSimulation.setMaxWidth(simulationWidth + 30);
+        windowSimulation.setMaxHeight(simulationHeight + 20);
+        windowSimulation.setPadding(new Insets(10,10,10,10));
         windowSimulation.getChildren().add(createLeftSide());
         windowSimulation.getChildren().add(createRightSide());
     }
 
     public HBox createLeftSide(){
         HBox verticalContainer = new HBox();
-        createGridPane(this.leftMap);
+        verticalContainer.setMaxHeight(simulationHeight);
+        GridPane leftGridPane = createGridPane(this.leftMap);
+        verticalContainer.getChildren().add(leftGridPane);
         return verticalContainer;
     }
 
 
     public HBox createRightSide(){
         HBox verticalContainer = new HBox();
-        createGridPane(this.rightMap);
+        verticalContainer.setMaxHeight(simulationHeight);
+        GridPane rightGridPane = createGridPane(this.rightMap);
+        verticalContainer.getChildren().add(rightGridPane);
         return verticalContainer;
     }
 
-    public void createGridPane(BoundedWorldMap map){
+    public GridPane createGridPane(BoundedWorldMap map){
+        GridPane gridPane = new GridPane();
+        int widthForGridpane = simulationWidth / 2;
+        int heightForGridpane = (simulationHeight * 3) / 5;
+        int colWidth = (widthForGridpane) / map.getWidth();
+        int rowHeight = (heightForGridpane) / map.getHeight();
+        gridPane.setMaxWidth (widthForGridpane);
+        gridPane.setPrefWidth(widthForGridpane);
+        //gridPane.setMinWidth (widthForGridpane);
 
+        gridPane.setMaxHeight(heightForGridpane);
+        gridPane.setPrefWidth(heightForGridpane);
+        //gridPane.setMinHeight(heightForGridpane);
+        ColumnConstraints colConstraint= new ColumnConstraints(colWidth);
+        RowConstraints rowConstraint = new RowConstraints(rowHeight);
+
+        gridPane.setGridLinesVisible(true);
+
+        for(int i = 0; i < map.getWidth(); i++){
+            gridPane.getColumnConstraints().add(colConstraint);
+        }
+
+        for(int i = 0; i < map.getHeight(); i++){
+            gridPane.getRowConstraints().add(rowConstraint);
+        }
+        Map<Vector2d, MapField> Hashmap = map.getActiveMapFields();
+        for(Vector2d position : Hashmap.keySet()){
+            MapField field = Hashmap.get(position);
+            Label label = new Label(field.toString());
+            gridPane.add(label,position.getX(),position.getY());
+            gridPane.setHalignment(label, HPos.CENTER);
+        }
+        gridPane.setAlignment(Pos.CENTER);
+
+        return gridPane;
     }
 
     public void disablePrimaryStage(){
@@ -129,7 +188,7 @@ public class App extends Application{
         createSimulationGUI();
         Stage simulationStage = new Stage();
         simulationStage.setTitle("Simulation window");
-        Scene scene = new Scene(windowSimulation, 1200, 650);
+        Scene scene = new Scene(windowSimulation, simulationWidth + 30, simulationHeight + 20);
         simulationStage.setScene(scene);
         simulationStage.show();
     }
@@ -162,8 +221,8 @@ public class App extends Application{
         startEnergyTextField = new formTextField("start energy:","100");
         moveEnergyTextField = new formTextField("move energy:","10");
         plantEnergyTextField = new formTextField("plant energy:","100");
-        initialNumberOfAnimalsTextField = new formTextField("initial number of animals:","30");
-        initialRefreshTimeTextField = new formTextField("refresh time(ms):","30");
+        numberOfAnimalsTextField = new formTextField("initial number of animals:","30");
+        refreshTimeTextField = new formTextField("refresh time(ms):","30");
 
         inputLeftCheckBox.getChildren().add(inputLeftMapIsMagicLabel);
         inputLeftCheckBox.getChildren().add(inputLeftMapIsMagic);
@@ -185,12 +244,17 @@ public class App extends Application{
         inputMenuVBox.getChildren().add(startEnergyTextField.getHBox());
         inputMenuVBox.getChildren().add(moveEnergyTextField.getHBox());
         inputMenuVBox.getChildren().add(plantEnergyTextField.getHBox());
-        inputMenuVBox.getChildren().add(initialNumberOfAnimalsTextField.getHBox());
+        inputMenuVBox.getChildren().add(numberOfAnimalsTextField.getHBox());
         inputMenuVBox.getChildren().add(inputOtherValues);
-        inputMenuVBox.getChildren().add(initialRefreshTimeTextField.getHBox());
+        inputMenuVBox.getChildren().add(refreshTimeTextField.getHBox());
         inputMenuVBox.getChildren().add(startSimulationButton);
         inputMenuVBox.setAlignment(Pos.CENTER);
+    }
 
+    @Override
+    public void animalsUpdate() {
+
+        createSimulationGUI();
     }
 
         /*public void disableOptionsEdition(){
