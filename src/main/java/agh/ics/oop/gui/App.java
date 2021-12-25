@@ -2,6 +2,7 @@ package agh.ics.oop.gui;
 
 import agh.ics.oop.*;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
@@ -21,6 +22,7 @@ import static java.lang.System.out;
 
 public class App extends Application implements  IUpdateAnimalsSimulation{
 
+    private IUpdateAnimalsSimulation app = this;
     private SimulationEngine leftMapEngine;
     private SimulationEngine rightMapEngine;
     private UnBoundedWorldMap leftMap;
@@ -60,10 +62,24 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     private Thread engineThreadForLeftMap;
     private Thread engineThreadForRightMap;
 
+    private GridPane gridPaneLeft;
+    private GridPane gridPaneRight;
+
     private int simulationWidth = 1200;
     private int simulationHeight = 750;
 
     private HBox windowSimulation;
+    ////////////////////////////////////////////////////////////////////////////
+    int width = 15;
+    int height = 15;
+    double jungleRatio = 0.5;
+    boolean isMagicLeft = false;
+    boolean isMagicRight = false;
+    int startingEnergy = 100;
+    int moveEnergy = 10;
+    int plantEnergy = 100;
+    int numberOfAnimals = 30;
+    int refreshTime = 30;
 
     private Scene scene;
     @Override
@@ -77,38 +93,45 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
     public void init(){
         createOptionsMenu();
+        app = this;
         try {
             startSimulationButton.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent event) {
                     try {
-                        int width = Integer.parseInt(widthTextField.getTextField().getText());
-                        int height = Integer.parseInt(heightTextField.getTextField().getText());
-                        int jungleRatio = Integer.parseInt(widthTextField.getTextField().getText());
-                        boolean isMagicLeft = inputLeftMapIsMagic.isSelected();
-                        boolean isMagicRight = inputRightMapIsMagic.isSelected();
-                        int startingEnergy = Integer.parseInt(startEnergyTextField.getTextField().getText());
-                        int moveEnergy = Integer.parseInt(moveEnergyTextField.getTextField().getText());
-                        int plantEnergy = Integer.parseInt(plantEnergyTextField.getTextField().getText());
-                        int numberOfAnimals = Integer.parseInt(numberOfAnimalsTextField.getTextField().getText());
-                        int refreshTime = Integer.parseInt(refreshTimeTextField.getTextField().getText());
-                        leftMap = new UnBoundedWorldMap(width,height,jungleRatio);
-                        leftMapEngine = new SimulationEngine(startingEnergy, moveEnergy, plantEnergy, numberOfAnimals,
-                                isMagicLeft , leftMap);
-                        engineThreadForLeftMap = new Thread(leftMapEngine);
-
-                        rightMap = new BoundedWorldMap(width,height,jungleRatio);
-                        rightMapEngine = new SimulationEngine(startingEnergy, moveEnergy, plantEnergy, numberOfAnimals,
-                                isMagicRight , rightMap);
-                        engineThreadForRightMap = new Thread(rightMapEngine);
-
+                        width = Integer.parseInt(widthTextField.getTextField().getText());
+                        height = Integer.parseInt(heightTextField.getTextField().getText());
+                        jungleRatio = Double.parseDouble(widthTextField.getTextField().getText());
+                        isMagicLeft = inputLeftMapIsMagic.isSelected();
+                        isMagicRight = inputRightMapIsMagic.isSelected();
+                        startingEnergy = Integer.parseInt(startEnergyTextField.getTextField().getText());
+                        moveEnergy = Integer.parseInt(moveEnergyTextField.getTextField().getText());
+                        plantEnergy = Integer.parseInt(plantEnergyTextField.getTextField().getText());
+                        numberOfAnimals = Integer.parseInt(numberOfAnimalsTextField.getTextField().getText());
+                        refreshTime = Integer.parseInt(refreshTimeTextField.getTextField().getText());
                     }catch(NumberFormatException numberFormatException){
                         System.out.println("ERROR 42: GIVEN VALUE IS NOT A NUMBER");
                     }
+                    gridPaneLeft = new GridPane();
+                    leftMap = new UnBoundedWorldMap(width,height,jungleRatio);
+                    leftMapEngine = new SimulationEngine(startingEnergy, moveEnergy, plantEnergy, numberOfAnimals,
+                            isMagicLeft , leftMap);
+                    leftMapEngine.setMoveDelay(refreshTime);
+                    leftMapEngine.addSimulationObserver(app);
+                    engineThreadForLeftMap = new Thread(leftMapEngine);
+
+                    gridPaneRight = new GridPane();
+                    rightMap = new BoundedWorldMap(width,height,jungleRatio);
+                    rightMapEngine = new SimulationEngine(startingEnergy, moveEnergy, plantEnergy, numberOfAnimals,
+                            isMagicRight , rightMap);
+                    rightMapEngine.setMoveDelay(refreshTime);
+                    rightMapEngine.addSimulationObserver(app);
+                    engineThreadForRightMap = new Thread(rightMapEngine);
 
                     disablePrimaryStage();
                     showApplicationScreen();
-
+                    engineThreadForRightMap.start();
+                    engineThreadForLeftMap.start();
                 }
             });
         }catch(IllegalThreadStateException ex){
@@ -129,22 +152,20 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     public HBox createLeftSide(){
         HBox verticalContainer = new HBox();
         verticalContainer.setMaxHeight(simulationHeight);
-        GridPane leftGridPane = createGridPane(this.leftMap);
+        GridPane leftGridPane = createGridPane(this.leftMap, gridPaneLeft);
         verticalContainer.getChildren().add(leftGridPane);
         return verticalContainer;
     }
 
-
     public HBox createRightSide(){
         HBox verticalContainer = new HBox();
         verticalContainer.setMaxHeight(simulationHeight);
-        GridPane rightGridPane = createGridPane(this.rightMap);
+        GridPane rightGridPane = createGridPane(this.rightMap, gridPaneRight);
         verticalContainer.getChildren().add(rightGridPane);
         return verticalContainer;
     }
 
-    public GridPane createGridPane(BoundedWorldMap map){
-        GridPane gridPane = new GridPane();
+    public GridPane createGridPane(BoundedWorldMap map, GridPane gridPane){
         int widthForGridpane = simulationWidth / 2;
         int heightForGridpane = (simulationHeight * 3) / 5;
         int colWidth = (widthForGridpane) / map.getWidth();
@@ -253,8 +274,11 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
     @Override
     public void animalsUpdate() {
-
-        createSimulationGUI();
+        Platform.runLater(() -> {
+            gridPaneLeft.getChildren().clear();
+            gridPaneRight.getChildren().clear();
+            createSimulationGUI();
+        });
     }
 
         /*public void disableOptionsEdition(){

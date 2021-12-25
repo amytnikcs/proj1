@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.lang.System.out;
+
 public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
+    private int moveDelay;
     private int magicCounter;
     private boolean wasItInMagicState;
     private Integer startingEnergy;
@@ -16,13 +19,14 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
     private boolean isMagic;
     private List<Animal> magicAnimals;
     private List<Animal> animals;
+    private List<IUpdateAnimalsSimulation> updateAnimals;
     private  DataTracker dataTracker;
 
     public SimulationEngine(Integer startingEnergy, Integer moveEnergy, Integer plantEnergy,
                             Integer initialNumberOfAnimals, boolean isMagic,
                             BoundedWorldMap map){
         this.map = map;
-
+        this.updateAnimals = new ArrayList<>();
         if(initialNumberOfAnimals > map.getWidth() * map.getHeight()) {
             System.out.println("PRZEKROCZONO MAX ZWIERZAT");
             initialNumberOfAnimals = map.getWidth() * map.getHeight();
@@ -88,8 +92,19 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
             }
 
             map.spawnGrass();
+
             System.out.println(dataTracker.getHowMuchGrassOnMap());
+            for(IUpdateAnimalsSimulation update : updateAnimals){
+                update.animalsUpdate();
+            }
+
             System.out.println(map.toString());
+
+            try {
+                Thread.sleep(moveDelay);
+            }catch (InterruptedException e) {
+                out.println("KTO SMIE BUDZIC MNIE ZE SNU");
+            }
         }
     }
 
@@ -137,6 +152,13 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
         magicAnimals.addAll(animals);
 
         wasItInMagicState = true;
+    }
+    public void addSimulationObserver(IUpdateAnimalsSimulation observer){
+        updateAnimals.add(observer);
+    }
+
+    public void setMoveDelay(int delay){
+        moveDelay = delay;
     }
 
     public List<Animal> getAnimals(){
