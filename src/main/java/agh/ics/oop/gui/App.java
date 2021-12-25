@@ -63,6 +63,52 @@ public class App extends Application{
     }
 
     public void init(){
+        createOptionsMenu();
+        String[] text = {new String()};
+        int numberoutput = 10;
+        try {
+            startSimulationButton.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    text[0] = widthTextField.getTextField().getText();
+                    try {
+                        int number = Integer.parseInt(widthTextField.getTextField().getText());
+                           //numberoutput = number;
+                    }catch(NumberFormatException numberFormatException){
+                        System.out.println("NOT A NUMBER");
+                    }
+                    System.out.println(numberoutput);
+
+                    widowWidth = 600;
+                    disablePrimaryStage();
+                    showApplicatoinScreen();
+
+                }
+            });
+        }catch(IllegalThreadStateException ex){
+            out.printf("PROCES JUZ WYSTARTOWAL");
+        }
+    }
+
+
+
+
+    public void disablePrimaryStage(){
+        this.primaryStage.hide();
+    }
+
+    public void showApplicatoinScreen(){
+        Stage simulationStage = new Stage();
+        simulationStage.setTitle("Simulation window");
+        windowSimulation = new HBox();
+        Label label = new Label("Game is HERE");
+        windowSimulation.getChildren().add(label);
+        Scene scene = new Scene(windowSimulation, 1000, 650);
+        simulationStage.setScene(scene);
+        simulationStage.show();
+    }
+
+    public void createOptionsMenu(){
         widowWidth = 300;
         windowHeight = 600;
         inputMenuVBox = new VBox(15);
@@ -119,32 +165,9 @@ public class App extends Application{
         inputMenuVBox.getChildren().add(startSimulationButton);
         inputMenuVBox.setAlignment(Pos.CENTER);
 
-
-        String[] text = {new String()};
-        int numberoutput = 10;
-        try {
-            startSimulationButton.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    text[0] = widthTextField.getTextField().getText();
-                    try {
-                        int number = Integer.parseInt(widthTextField.getTextField().getText());
-                           //numberoutput = number;
-                    }catch(NumberFormatException numberFormatException){
-                        System.out.println("NOT A NUMBER");
-                    }
-                    System.out.println(numberoutput);
-
-                    widowWidth = 600;
-                    disableOptionsEdition();
-                    showApplicatoinScreen();
-                }
-            });
-        }catch(IllegalThreadStateException ex){
-            out.printf("PROCES JUZ WYSTARTOWAL");
-        }
     }
-    /*public void disableOptionsEdition(){
+
+        /*public void disableOptionsEdition(){
         widthTextField.getHBox().setDisable(true);
         heightTextField.getHBox().setDisable(true);
         jungleRatioTextField.getHBox().setDisable(true);
@@ -159,14 +182,4 @@ public class App extends Application{
         startSimulationButton.setVisible(false);
     }*/
 
-    public void showApplicatoinScreen(){
-        Stage simulationStage = new Stage();
-        simulationStage.setTitle("Simulation window");
-        windowSimulation = new HBox();
-        Label label = new Label("Game is HERE");
-        windowSimulation.getChildren().add(label);
-        Scene scene = new Scene(windowSimulation, 1000, 650);
-        simulationStage.setScene(scene);
-        simulationStage.show();
-    }
 }
