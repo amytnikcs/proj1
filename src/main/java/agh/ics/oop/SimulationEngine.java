@@ -62,7 +62,6 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
 
     public void run(){
         System.out.println(map.toString());
-        synchronized (this) {
             while (animals.size() > 0) {
                 dataTracker.addDay();
                 if (isMagic && animals.size() == 5) {
@@ -102,14 +101,11 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
                 System.out.println(this);
                 System.out.println(map.getGrassAmount());
                 System.out.println(map.toString());
-                //notify();
                 try {
-                    //wait();
                     Thread.sleep(moveDelay);
                 } catch (InterruptedException e) {
                     out.println("KTO SMIE BUDZIC MNIE ZE SNU");
                 }
-            }
         }
     }
 

@@ -2,7 +2,7 @@ package agh.ics.oop;
 
 import java.util.*;
 
-public class MapField implements IPositionChangeObserver{
+public class MapField implements IPositionChangeObserver,IMapElement{
     Comparator<Animal> Comparator = new Comparator<Animal>() {
         @Override
         public int compare(Animal Sheldon, Animal Leonard) {
@@ -145,8 +145,22 @@ public class MapField implements IPositionChangeObserver{
         animalsOnField.sort(Comparator);
         if(numberOfAnimals > 0 )
             return animalsOnField.getFirst().toString();
+
         else if(this.grass != null)
             return grass.toString();
+
+        return null;
+    }
+
+    @Override
+    public String showTypeOfImage() {
+        animalsOnField.sort(Comparator);
+        if(numberOfAnimals > 0 )
+            return animalsOnField.getFirst().showTypeOfImage();
+
+        else if(this.grass != null)
+            return grass.showTypeOfImage();
+
         return null;
     }
 

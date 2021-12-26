@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Animal {
+public class Animal implements IMapElement{
     private static Integer moveEnergy;
     private static Integer startEnergy;
     private final static GenesParser parser = new GenesParser();
@@ -129,6 +129,30 @@ public class Animal {
 
     public Vector2d getPosition(){
         return this.position;
+    }
+
+    @Override
+    public String showTypeOfImage() {
+
+        if(energy >= startEnergy)
+            return "src/main/resources/animal1.png";
+
+        if(energy >= startEnergy * 0.8)
+            return "src/main/resources/animal2.png";
+
+        if(energy >= startEnergy * 0.6)
+            return "src/main/resources/animal3.png";
+
+        if(energy >= startEnergy * 0.4)
+            return "src/main/resources/animal4.png";
+
+        if(energy >= startEnergy * 0.2)
+            return "src/main/resources/animal5.png";
+
+        if(energy >= startEnergy * 0.1)
+            return "src/main/resources/animal6.png";
+
+        return "src/main/resources/animal7.png";
     }
 
     public int getStartEnergy(){return this.startEnergy;}

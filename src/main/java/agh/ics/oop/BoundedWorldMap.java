@@ -1,13 +1,14 @@
 package agh.ics.oop;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.Math.sqrt;
 
-public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnimalLifeCycleObserver,IGrassEatenObserver {
+public class BoundedWorldMap implements IWorldMap, IPositionChangeObserver, IAnimalLifeCycleObserver, IGrassEatenObserver {
 
-    protected Map<Vector2d, MapField> activeMapFields = new HashMap<>();
-    protected Set<Vector2d> freeJungleFields = new HashSet<Vector2d>();
+    protected Map<Vector2d, MapField> activeMapFields = new ConcurrentHashMap<>();
+    protected Set<Vector2d> freeJungleFields = new HashSet<Vector2d>(); 
     protected Set<Vector2d> freeSawannaFields = new HashSet<Vector2d>();
     protected List<IAnimalLifeCycleObserver> animalLifeCycleObservers;
 
