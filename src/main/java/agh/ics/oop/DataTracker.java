@@ -8,12 +8,14 @@ public class DataTracker {
 
     private double averageAnimalLiveSpan;
     private int numberOfDeadAnimals;
+    private int numberOfDays;
     private SimulationEngine engine;
     private BoundedWorldMap map;
 
     public DataTracker(SimulationEngine engine, BoundedWorldMap map){
         this.engine = engine;
         this.map = map;
+        numberOfDays = 0;
         averageAnimalLiveSpan = 0;
         numberOfDeadAnimals = 0;
     }
@@ -79,5 +81,17 @@ public class DataTracker {
 
     public int getHowMuchGrassOnMap() {
         return map.getGrassAmount();
+    }
+
+    public int numberOfAnimals(){
+        return  engine.getAnimals().size();
+    }
+
+    public void addDay(){
+        numberOfDays++;
+    }
+
+    public int daysPassed(){
+        return numberOfDays;
     }
 }

@@ -9,6 +9,9 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -18,7 +21,6 @@ import javafx.stage.Stage;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static java.lang.System.out;
 
@@ -71,6 +73,15 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     private int simulationWidth = 1200;
     private int simulationHeight = 750;
 
+
+    private LineChart leftLineChartAnimalsGrass;
+    private XYChart.Series leftSeriesAnimals = new XYChart.Series();
+    private XYChart.Series leftSeriesGrass = new XYChart.Series();
+
+    private LineChart rightLineChartAnimalsGrass;
+    private XYChart.Series rightSeriesAnimals = new XYChart.Series();
+    private XYChart.Series rightSeriesGrass = new XYChart.Series();
+
     private HBox windowSimulation;
     ////////////////////////////////////////////////////////////////////////////
 
@@ -97,6 +108,10 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
     public void init(){
         createOptionsMenu();
+        leftLineChartAnimalsGrass = createAnimalGrassLineChart(leftLineChartAnimalsGrass, leftSeriesAnimals,
+                leftSeriesGrass);
+        rightLineChartAnimalsGrass = createAnimalGrassLineChart(rightLineChartAnimalsGrass, rightSeriesAnimals,
+                rightSeriesGrass);
         app = this;
         try {
             startSimulationButton.setOnAction(new EventHandler<ActionEvent>() {
@@ -131,9 +146,10 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
                     rightMapEngine.setMoveDelay(refreshTime);
                     rightMapEngine.addSimulationObserver(app);
                     engineThreadForRightMap = new Thread(rightMapEngine);
+
                     showApplicationScreen();
-                    //engineThreadForRightMap.start();
-                    engineThreadForLeftMap.start();
+                        //engineThreadForRightMap.start();
+                        engineThreadForLeftMap.start();
 
                 }
             });
@@ -152,21 +168,50 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         windowSimulation.getChildren().add(createRightSide());
     }
 
-    public HBox createLeftSide(){
-        HBox verticalContainer = new HBox();
+    public VBox createLeftSide(){
+        VBox verticalContainer = new VBox();
+        HBox horizontalContainer = new HBox(5);
         verticalContainer.setMaxHeight(simulationHeight);
         GridPane leftGridPane = createGridPane(this.leftMap, gridPaneLeft);
         verticalContainer.getChildren().add(leftGridPane);
+        verticalContainer.getChildren().add(horizontalContainer);
+        horizontalContainer.getChildren().add(leftLineChartAnimalsGrass);
+        //updateAnimalGrassChart(leftSeriesAnimals, leftSeriesGrass , leftMapEngine.getTracker());
         return verticalContainer;
     }
 
-    public HBox createRightSide(){
-        HBox verticalContainer = new HBox();
+    public VBox createRightSide(){
+        VBox verticalContainer = new VBox();
+        HBox horizontalContainer = new HBox(5);
         verticalContainer.setMaxHeight(simulationHeight);
         GridPane rightGridPane = createGridPane(this.rightMap, gridPaneRight);
         verticalContainer.getChildren().add(rightGridPane);
+        verticalContainer.getChildren().add(horizontalContainer);
+        horizontalContainer.getChildren().add(rightLineChartAnimalsGrass);
+       //updateAnimalGrassChart(rightSeriesAnimals,rightSeriesGrass, rightMapEngine.getTracker());
         return verticalContainer;
     }
+
+    /*public void updateAnimalGrassChart(XYChart.Series animals,XYChart.Series grass, DataTracker tracker){
+        animals.getData().add(tracker.daysPassed(), tracker.numberOfAnimals());
+        grass.getData().add(tracker.daysPassed(), tracker.getHowMuchGrassOnMap());
+    }*/
+
+    public LineChart createAnimalGrassLineChart(LineChart lineChart , XYChart.Series animals, XYChart.Series grass){
+        NumberAxis xAxis = new NumberAxis();
+        NumberAxis yAxis = new NumberAxis();
+        xAxis.setLabel("Number of days");
+        yAxis.setLabel("Number of animals/grass");
+        animals.setName("animals");
+        grass.setName("grass");
+        lineChart = new LineChart<Number,Number>(xAxis,yAxis);
+        lineChart.setTitle("animals/grass number");
+        lineChart.setPrefWidth(simulationWidth / 6);
+        lineChart.setMaxWidth(simulationWidth / 6);
+        lineChart.getData().addAll(animals, grass);
+        return lineChart;
+    }
+
 
     public GridPane createGridPane(BoundedWorldMap map, GridPane gridPane){
         gridPane.setGridLinesVisible(false); //https://stackoverflow.com/questions/11147788/

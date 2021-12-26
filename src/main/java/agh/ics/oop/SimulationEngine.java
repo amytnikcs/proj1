@@ -62,50 +62,53 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
 
     public void run(){
         System.out.println(map.toString());
+        synchronized (this) {
+            while (animals.size() > 0) {
+                dataTracker.addDay();
+                if (isMagic && animals.size() == 5) {
+                    magicStateEnable();
+                    if (wasItInMagicState)
+                        magicEvolution();
+                }
 
-        while(animals.size() > 0){
-            if(isMagic && animals.size() == 5) {
-                magicStateEnable();
-                if(wasItInMagicState)
+                map.removeDeadAnimals();
+
+                if (wasItInMagicState && isMagic)
                     magicEvolution();
-            }
 
-            map.removeDeadAnimals();
+                for (Animal animal : animals) {
+                    animal.move();
+                }
 
-            if(wasItInMagicState && isMagic)
-                magicEvolution();
+                map.eatGrass();
 
-            for(Animal animal : animals) {
-                animal.move();
-            }
+                map.breedAnimals();
 
-            map.eatGrass();
+                if (wasItInMagicState && isMagic)
+                    magicEvolution();
 
-            map.breedAnimals();
+                for (Animal animal : animals) {
+                    animal.decreaseEnergy(moveEnergy);
+                    animal.anotherDayLived();
+                }
+                System.out.println(this);
+                System.out.println(map.getGrassAmount());
 
-            if(wasItInMagicState && isMagic)
-                magicEvolution();
+                map.spawnGrass();
 
-            for(Animal animal : animals){
-                animal.decreaseEnergy(moveEnergy);
-                animal.anotherDayLived();
-            }
-            System.out.println(this);
-            System.out.println(map.getGrassAmount());
-
-            map.spawnGrass();
-
-            for(IUpdateAnimalsSimulation update : updateAnimals){
-                update.animalsUpdate();
-            }
-            System.out.println(this);
-            System.out.println(map.getGrassAmount());
-            System.out.println(map.toString());
-
-            try {
-                Thread.sleep(moveDelay);
-            }catch (InterruptedException e) {
-                out.println("KTO SMIE BUDZIC MNIE ZE SNU");
+                for (IUpdateAnimalsSimulation update : updateAnimals) {
+                    update.animalsUpdate();
+                }
+                System.out.println(this);
+                System.out.println(map.getGrassAmount());
+                System.out.println(map.toString());
+                //notify();
+                try {
+                    //wait();
+                    Thread.sleep(moveDelay);
+                } catch (InterruptedException e) {
+                    out.println("KTO SMIE BUDZIC MNIE ZE SNU");
+                }
             }
         }
     }
@@ -165,5 +168,9 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
 
     public List<Animal> getAnimals(){
         return animals;
+    }
+
+    public DataTracker getTracker(){
+        return dataTracker;
     }
 }
