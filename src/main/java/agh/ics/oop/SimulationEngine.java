@@ -47,7 +47,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
         map.addObserverDeath(this);
 
         //initialazing animals
-        for(int i = 0; i < this.initialNumberOfAnimals; i++) {
+        for (int i = 0; i < this.initialNumberOfAnimals; i++) {
             Animal animal = new Animal(map, genesSoup.placeOfRandomGenes(map.getWidth(), map.getHeight()),
                     startingEnergy, genesSoup.getRandomGenes());
             if (this.map.initialPlace(animal)) {
@@ -55,7 +55,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
                 animal.setMoveEnergy(moveEnergy);
                 animal.setStartEnergy(startingEnergy);
             } else
-                i -= 1;
+                    i -= 1;
         }
         dataTracker = new DataTracker(this, map);
     }
@@ -90,14 +90,16 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
                 animal.decreaseEnergy(moveEnergy);
                 animal.anotherDayLived();
             }
+            System.out.println(this);
+            System.out.println(map.getGrassAmount());
 
             map.spawnGrass();
 
-            System.out.println(dataTracker.getHowMuchGrassOnMap());
             for(IUpdateAnimalsSimulation update : updateAnimals){
                 update.animalsUpdate();
             }
-
+            System.out.println(this);
+            System.out.println(map.getGrassAmount());
             System.out.println(map.toString());
 
             try {

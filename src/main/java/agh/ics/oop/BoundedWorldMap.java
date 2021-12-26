@@ -183,10 +183,14 @@ public class BoundedWorldMap implements IWorldMap,IPositionChangeObserver, IAnim
 
 
     public void spawnGrass(){
-        if(freeSawannaFields.size() != 0)
-            spawnGrassAt(freeSawannaFields);
-        if(freeJungleFields.size() != 0)
+        if(freeJungleFields.size() != 0) {
+            System.out.println("J");
             spawnGrassAt(freeJungleFields);
+        }
+        if(freeSawannaFields.size() != 0) {
+            System.out.println("S");
+            spawnGrassAt(freeSawannaFields);
+        }
     }
 
     public void spawnGrassAt(Set<Vector2d> freeFields){

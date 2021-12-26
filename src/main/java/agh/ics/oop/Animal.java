@@ -138,4 +138,5 @@ public class Animal {
     }
 
     public int[] getGenes(){return this.genes;}
+
 }

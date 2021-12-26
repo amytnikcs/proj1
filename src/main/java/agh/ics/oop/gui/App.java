@@ -17,6 +17,8 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static java.lang.System.out;
 
@@ -59,6 +61,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     private Stage primaryStage;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
+    private ExecutorService executor;
     private Thread engineThreadForLeftMap;
     private Thread engineThreadForRightMap;
 
@@ -70,6 +73,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
     private HBox windowSimulation;
     ////////////////////////////////////////////////////////////////////////////
+
     int width = 15;
     int height = 15;
     double jungleRatio = 0.5;
@@ -101,7 +105,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
                     try {
                         width = Integer.parseInt(widthTextField.getTextField().getText());
                         height = Integer.parseInt(heightTextField.getTextField().getText());
-                        jungleRatio = Double.parseDouble(widthTextField.getTextField().getText());
+                        jungleRatio = Double.parseDouble(jungleRatioTextField.getTextField().getText());
                         isMagicLeft = inputLeftMapIsMagic.isSelected();
                         isMagicRight = inputRightMapIsMagic.isSelected();
                         startingEnergy = Integer.parseInt(startEnergyTextField.getTextField().getText());
@@ -113,7 +117,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
                         System.out.println("ERROR 42: GIVEN VALUE IS NOT A NUMBER");
                     }
                     gridPaneLeft = new GridPane();
-                    leftMap = new UnBoundedWorldMap(width,height,jungleRatio);
+                    leftMap = new UnBoundedWorldMap(width, height, jungleRatio);
                     leftMapEngine = new SimulationEngine(startingEnergy, moveEnergy, plantEnergy, numberOfAnimals,
                             isMagicLeft , leftMap);
                     leftMapEngine.setMoveDelay(refreshTime);
@@ -127,11 +131,10 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
                     rightMapEngine.setMoveDelay(refreshTime);
                     rightMapEngine.addSimulationObserver(app);
                     engineThreadForRightMap = new Thread(rightMapEngine);
-
-                    disablePrimaryStage();
                     showApplicationScreen();
-                    engineThreadForRightMap.start();
+                    //engineThreadForRightMap.start();
                     engineThreadForLeftMap.start();
+
                 }
             });
         }catch(IllegalThreadStateException ex){
@@ -142,7 +145,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
     public void createSimulationGUI(){
         windowSimulation = new HBox(10);
-        windowSimulation.setMaxWidth(simulationWidth + 30);
+        windowSimulation.setMaxWidth(simulationWidth + 200);
         windowSimulation.setMaxHeight(simulationHeight + 20);
         windowSimulation.setPadding(new Insets(10,10,10,10));
         windowSimulation.getChildren().add(createLeftSide());
@@ -166,6 +169,11 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     }
 
     public GridPane createGridPane(BoundedWorldMap map, GridPane gridPane){
+        gridPane.setGridLinesVisible(false); //https://stackoverflow.com/questions/11147788/
+        gridPane.getColumnConstraints().clear();
+        gridPane.getRowConstraints().clear();
+        gridPane.getChildren().clear();
+        gridPane.setGridLinesVisible(true);
         int widthForGridpane = simulationWidth / 2;
         int heightForGridpane = (simulationHeight * 3) / 5;
         int colWidth = (widthForGridpane) / map.getWidth();
@@ -189,11 +197,12 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         for(int i = 0; i < map.getHeight(); i++){
             gridPane.getRowConstraints().add(rowConstraint);
         }
-        Map<Vector2d, MapField> Hashmap = map.getActiveMapFields();
-        for(Vector2d position : Hashmap.keySet()){
-            MapField field = Hashmap.get(position);
+        Map<Vector2d, MapField> hashMap = map.getActiveMapFields();
+
+        for(Vector2d position : hashMap.keySet()){
+            MapField field = hashMap.get(position);
             Label label = new Label(field.toString());
-            gridPane.add(label,position.getX(),position.getY());
+            gridPane.add(label, position.getX(), position.getY());
             gridPane.setHalignment(label, HPos.CENTER);
         }
         gridPane.setAlignment(Pos.CENTER);
@@ -207,11 +216,10 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
     public void showApplicationScreen(){
         createSimulationGUI();
-        Stage simulationStage = new Stage();
-        simulationStage.setTitle("Simulation window");
+        primaryStage.setTitle("Simulation window");
         Scene scene = new Scene(windowSimulation, simulationWidth + 30, simulationHeight + 20);
-        simulationStage.setScene(scene);
-        simulationStage.show();
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
 
     public void createOptionsMenu(){
@@ -243,7 +251,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         moveEnergyTextField = new formTextField("move energy:","10");
         plantEnergyTextField = new formTextField("plant energy:","100");
         numberOfAnimalsTextField = new formTextField("initial number of animals:","30");
-        refreshTimeTextField = new formTextField("refresh time(ms):","30");
+        refreshTimeTextField = new formTextField("refresh time(ms):","300");
 
         inputLeftCheckBox.getChildren().add(inputLeftMapIsMagicLabel);
         inputLeftCheckBox.getChildren().add(inputLeftMapIsMagic);
@@ -277,7 +285,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         Platform.runLater(() -> {
             gridPaneLeft.getChildren().clear();
             gridPaneRight.getChildren().clear();
-            createSimulationGUI();
+            showApplicationScreen();
         });
     }
 
