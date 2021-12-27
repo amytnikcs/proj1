@@ -114,7 +114,10 @@ public class MapField implements IPositionChangeObserver,IMapElement{
                         secondParent.getEnergy()*0.25), childGenes);
         addAnimal(child);
         notifyAboutBorn(child);
-        child.addParents(firstParent,secondParent);
+
+        if(firstParent.isDescendentOfTracked() || secondParent.isDescendentOfTracked())
+            child.childOfTracked();
+
         firstParent.decreaseEnergy((int) (firstParent.getEnergy()*0.25));
         secondParent.decreaseEnergy((int) (secondParent.getEnergy()*0.25));
         firstParent.newChild();
@@ -234,5 +237,9 @@ public class MapField implements IPositionChangeObserver,IMapElement{
         for (IPositionChangeObserver observer : this.animals) {
             observer.positionChanged(oldPosition, newPosition, animal);
         }
+    }
+
+    public Animal getFirst(){
+        return animalsOnField.getFirst();
     }
 }

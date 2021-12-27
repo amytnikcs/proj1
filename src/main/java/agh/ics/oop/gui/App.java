@@ -1,6 +1,7 @@
 package agh.ics.oop.gui;
 
 import agh.ics.oop.*;
+import com.sun.scenario.animation.AnimationPulseMBean;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -106,6 +107,17 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
     private HBox windowSimulation;
     private Scene simulationScene;
+
+    private AnimalTracker leftAnimalTracker;
+    private Text leftTrackerDayOfDeath = new Text();
+    private Text leftTrackerNumberOfAnimalsDescendans = new Text();
+    private Text leftTrackerNumberOfChildren = new Text();
+
+
+    private AnimalTracker rightAnimalTracker;
+    private Text rightTrackerDayOfDeath = new Text();
+    private Text rightTrackerNumberOfAnimalsDescendans = new Text();
+    private Text rightTrackerNumberOfChildren = new Text();
     ////////////////////////////////////////////////////////////////////////////
 
     int width = 15;
@@ -161,6 +173,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         gridPaneLeft = createGridPane(leftMap,gridPaneLeft);
         leftMapEngine.setMoveDelay(refreshTime);
         leftMapEngine.addSimulationObserver(app());
+        leftAnimalTracker = leftMapEngine.getAnimalTracker();
         engineThreadForLeftMap = new Thread(leftMapEngine);
 
         gridPaneRight = new GridPane();
@@ -170,6 +183,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         gridPaneRight = createGridPane(rightMap,gridPaneRight);
         rightMapEngine.setMoveDelay(refreshTime);
         rightMapEngine.addSimulationObserver(app());
+        rightAnimalTracker = rightMapEngine.getAnimalTracker();
         engineThreadForRightMap = new Thread(rightMapEngine);
 
         showApplicationScreen();
@@ -191,47 +205,21 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         refreshTime = Integer.parseInt(refreshTimeTextField.getTextField().getText());
     }
 
-
-
-    public void leftButtonHandle(){
-        try {
-            leftThreadStopStart.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    if(leftThreadRunning) {
-                        leftThreadRunning = false;
-                        engineThreadForLeftMap.suspend();
-                    }
-                    else {
-                        leftThreadRunning = true;
-                        engineThreadForLeftMap.resume();
-                    }
-                }
-            });
-        }catch(IllegalThreadStateException ex){
-            out.printf("PROCES JUZ WYSTARTOWAL");
+    private void updateTrackedData(){
+        if(leftAnimalTracker.getTrackedAnimal() != null) {
+            if (leftAnimalTracker.getDayOfDeath() != null)
+                leftTrackerDayOfDeath.setText(Integer.toString(leftAnimalTracker.getDayOfDeath()));
+            leftTrackerNumberOfChildren.setText(Integer.toString(leftAnimalTracker.trackedAnimalChildren()));
+            leftTrackerNumberOfAnimalsDescendans.setText(Integer.toString(leftAnimalTracker.trackedAnimalDescendants()));
+        }
+        if(rightAnimalTracker.getTrackedAnimal() != null){
+            if(rightAnimalTracker.getDayOfDeath() != null)
+                rightTrackerDayOfDeath.setText(Integer.toString(rightAnimalTracker.getDayOfDeath()));
+            rightTrackerNumberOfChildren.setText(Integer.toString(rightAnimalTracker.trackedAnimalChildren()));
+            rightTrackerNumberOfAnimalsDescendans.setText(Integer.toString(rightAnimalTracker.trackedAnimalDescendants()));
         }
     }
 
-    public void rightButtonHandle(){
-        try {
-            rightThreadStopStart.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    if(rightThreadRunning){
-                        rightThreadRunning = false;
-                        engineThreadForRightMap.suspend();
-                    }
-                    else {
-                        rightThreadRunning = true;
-                        engineThreadForRightMap.resume();
-                    }
-                }
-            });
-        }catch(IllegalThreadStateException ex){
-            out.printf("PROCES JUZ WYSTARTOWAL");
-        }
-    }
 
     public void showApplicationScreen(){
         createSimulationGUI();
@@ -270,6 +258,9 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         boxForStartStopTitle.getChildren().add(leftMapTitle);
         boxForStartStopTitle.getChildren().add(leftThreadStopStart);
         statsAndTrackContainer.getChildren().add(leftDominantGenes);
+        statsAndTrackContainer.getChildren().add(leftTrackerDayOfDeath);
+        statsAndTrackContainer.getChildren().add(leftTrackerNumberOfChildren);
+        statsAndTrackContainer.getChildren().add(leftTrackerNumberOfAnimalsDescendans);
         animalGrassEnergyContainer.getChildren().add(leftLineEnergyChart);
         animalGrassEnergyContainer.getChildren().add(leftLineChartAnimalsGrass);
         childrenLifeSpanContainer.getChildren().add(leftLineChildrenChart);
@@ -294,6 +285,9 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         boxForStartStopTitle.getChildren().add(rightMapTitle);
         boxForStartStopTitle.getChildren().add(rightThreadStopStart);
         statsAndTrackContainer.getChildren().add(rightDominantGenes);
+        statsAndTrackContainer.getChildren().add(rightTrackerDayOfDeath);
+        statsAndTrackContainer.getChildren().add(rightTrackerNumberOfChildren);
+        statsAndTrackContainer.getChildren().add(rightTrackerNumberOfAnimalsDescendans);
         animalGrassEnergyContainer.getChildren().add(rightLineEnergyChart);
         animalGrassEnergyContainer.getChildren().add(rightLineChartAnimalsGrass);
         childrenLifeSpanContainer.getChildren().add(rightLineChildrenChart);
@@ -364,7 +358,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
                     imageView.setFitWidth(imageWidth);
                     imageView.setFitHeight(imageHeight);
                     gridPane.add(imageView, position.getX(), position.getY());
-                    addPane(gridPane, position.getX(), position.getY());
+                    addPane(gridPane, position.getX(), position.getY(), map);
                 }
 
             }
@@ -372,10 +366,25 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         return gridPane;
     }
 
-    private void addPane(GridPane gridPane, int col, int row) {
+    private void addPane(GridPane gridPane, int col, int row, BoundedWorldMap map) {
         Pane pane = new Pane();
         pane.setOnMouseClicked(e -> {
-            System.out.printf("Mouse clicked at cell [%d, %d]%n", col, row);
+            try {
+                Vector2d position = new Vector2d(col, row);
+                if (map.equals(rightMap)) {
+                    if (map.getActiveMapFields().get(position).containAnimals()) {
+                        rightAnimalTracker.newTrackedAnimal(map.getActiveMapFields().get(position).getFirst());
+                        System.out.println("tracking animal at:" + position);
+                    }
+                } else {
+                    if (map.getActiveMapFields().get(position).containAnimals()) {
+                        leftAnimalTracker.newTrackedAnimal(map.getActiveMapFields().get(position).getFirst());
+                        System.out.println("tracking animal at:" + position);
+                    }
+                }
+            }catch(Exception ex){
+                System.out.println("tracking problem");
+            }
         });
         gridPane.add(pane, col, row);
     }
@@ -394,6 +403,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
             gridPaneRight = createGridPane(this.rightMap, gridPaneRight);
             updateChartsValue(rightSeriesEnergy, rightSeriesAnimals, rightSeriesGrass, rightSeriesLiveSpan,
                     rightSeriesChildren, rightMapEngine.getTracker());
+            updateTrackedData();
         });
     }
 
@@ -520,6 +530,47 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         lineChart.setCreateSymbols(false);
         return lineChart;
     }
+
+    public void leftButtonHandle(){
+        try {
+            leftThreadStopStart.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    if(leftThreadRunning) {
+                        leftThreadRunning = false;
+                        engineThreadForLeftMap.suspend();
+                    }
+                    else {
+                        leftThreadRunning = true;
+                        engineThreadForLeftMap.resume();
+                    }
+                }
+            });
+        }catch(IllegalThreadStateException ex){
+            out.printf("PROCES JUZ WYSTARTOWAL");
+        }
+    }
+
+    public void rightButtonHandle(){
+        try {
+            rightThreadStopStart.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    if(rightThreadRunning){
+                        rightThreadRunning = false;
+                        engineThreadForRightMap.suspend();
+                    }
+                    else {
+                        rightThreadRunning = true;
+                        engineThreadForRightMap.resume();
+                    }
+                }
+            });
+        }catch(IllegalThreadStateException ex){
+            out.printf("PROCES JUZ WYSTARTOWAL");
+        }
+    }
+
 
 
         /*public void disableOptionsEdition(){

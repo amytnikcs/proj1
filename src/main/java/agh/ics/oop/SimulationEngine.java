@@ -27,6 +27,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
                             BoundedWorldMap map){
         this.map = map;
         animalTracker = new AnimalTracker();
+
         this.updateAnimals = new ArrayList<>();
         if(initialNumberOfAnimals > map.getWidth() * map.getHeight()) {
             System.out.println("PRZEKROCZONO MAX ZWIERZAT");
@@ -64,6 +65,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
     public void run(){
         System.out.println(map.toString());
             while (animals.size() > 0) {
+                animalTracker.newDay();
                 dataTracker.addDay();
                 if (isMagic && animals.size() == 5) {
                     magicStateEnable();
@@ -90,7 +92,6 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
                 for (Animal animal : animals) {
                     animal.decreaseEnergy(moveEnergy);
                     animal.anotherDayLived();
-                    animalTracker.newDay();
                 }
                 System.out.println(this);
                 System.out.println(map.getGrassAmount());

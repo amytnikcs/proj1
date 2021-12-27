@@ -6,40 +6,38 @@ import java.util.Set;
 public class AnimalTracker {
     private Animal trackedAnimal;
     private boolean dead;
+    private int livedDays;
     private int daysFromStart;
-    private Set<Animal> descendantSet = new HashSet<Animal>();
+    private int descendetNumber;
     public AnimalTracker(){
         daysFromStart = 0;
     }
 
-
     public void newTrackedAnimal(Animal animal){
         trackedAnimal = animal;
+        animal.setAnimalAsOriginallyTrackedAnimal();
+        descendetNumber = 0;
         dead = false;
-        descendantSet.clear();
-        descendantSet.add(trackedAnimal);
     }
 
     public void checkIfAnimalIsDescendent(Animal descendentCandidate){
-        Animal parent1 = descendentCandidate.getParent1();
-        Animal parent2 =  descendentCandidate.getParent2();
-        if( parent1 == null || parent2 == null)
-            return;
-        if(descendantSet.contains(parent1) || descendantSet.contains(parent2))
-            descendantSet.add(descendentCandidate);
+        if(descendentCandidate.isDescendentOfTracked())
+            descendetNumber++;
+
     }
 
-    public int trackedAnimalChildren(){
+    public int trackedAnimalChildren()
+    {
         return trackedAnimal.getNumberOfChildren();
     }
 
     public int trackedAnimalDescendants(){
-        return descendantSet.size() - 1;
+       return descendetNumber;
     }
 
     public Integer getDayOfDeath(){
         if(dead)
-            return daysFromStart;
+            return livedDays;
         return null;
     }
 
@@ -48,7 +46,13 @@ public class AnimalTracker {
     }
 
     public void checkifTrackedAnimalDied(Animal animal) {
-        if(animal == trackedAnimal)
+        if(animal.isOriginallyTrackedAnimal()){
             dead = true;
+            livedDays = daysFromStart;
+        }
+    }
+
+    public Animal getTrackedAnimal(){
+        return  trackedAnimal;
     }
 }
