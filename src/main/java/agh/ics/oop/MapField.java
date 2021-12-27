@@ -113,11 +113,14 @@ public class MapField implements IPositionChangeObserver,IMapElement{
         Animal child = new Animal(firstParent.getMap(), this.position, (int) (firstParent.getEnergy()*0.25 +
                         secondParent.getEnergy()*0.25), childGenes);
         addAnimal(child);
-        notifyAboutBorn(child);
+        if(firstParent.isOriginallyTrackedAnimal() || secondParent.isOriginallyTrackedAnimal())
+            child.firstLineChildOfTracked();
 
-        if(firstParent.isDescendentOfTracked() || secondParent.isDescendentOfTracked())
+        else if(firstParent.isDescendentOfTracked() || secondParent.isDescendentOfTracked() ||
+            firstParent.isFirstLineChild() || secondParent.isFirstLineChild())
             child.childOfTracked();
 
+        notifyAboutBorn(child);
         firstParent.decreaseEnergy((int) (firstParent.getEnergy()*0.25));
         secondParent.decreaseEnergy((int) (secondParent.getEnergy()*0.25));
         firstParent.newChild();
@@ -237,6 +240,13 @@ public class MapField implements IPositionChangeObserver,IMapElement{
         for (IPositionChangeObserver observer : this.animals) {
             observer.positionChanged(oldPosition, newPosition, animal);
         }
+    }
+
+    public boolean containsGenome(int[] genes){
+        for(Animal animal : animalsOnField) {
+            if (Arrays.equals(genes,animal.getGenes())){ return true; }
+        }
+        return false;
     }
 
     public Animal getFirst(){

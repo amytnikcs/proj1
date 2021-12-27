@@ -17,11 +17,13 @@ public class Animal implements IMapElement{
     private MapDirection orientation;
     private int livedDays;
     private int numberOfChildren;
-    private boolean isDescendentOfTracked;
     private boolean isOriginallyTrackedAnimal;
+    private boolean isFirstLineChild;
+    private boolean isDescendentOfTracked;
 
 
     public Animal(IWorldMap map, Vector2d initialPosition, Integer energy, int[] genes){
+        isFirstLineChild = false;
         isOriginallyTrackedAnimal = false;
         isDescendentOfTracked = false;
         numberOfChildren = 0;
@@ -171,6 +173,9 @@ public class Animal implements IMapElement{
     public void childOfTracked(){
         isDescendentOfTracked = true;
     }
+    public void firstLineChildOfTracked(){
+        isFirstLineChild = true;
+    }
 
     public void setAnimalAsOriginallyTrackedAnimal(){
         isOriginallyTrackedAnimal = true;
@@ -179,6 +184,10 @@ public class Animal implements IMapElement{
 
     public boolean isOriginallyTrackedAnimal(){
         return isOriginallyTrackedAnimal;
+    }
+
+    public boolean isFirstLineChild(){
+        return  isFirstLineChild;
     }
 
     public boolean isDescendentOfTracked(){

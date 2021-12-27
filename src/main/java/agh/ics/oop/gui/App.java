@@ -15,6 +15,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -118,6 +119,13 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     private Text rightTrackerDayOfDeath = new Text();
     private Text rightTrackerNumberOfAnimalsDescendans = new Text();
     private Text rightTrackerNumberOfChildren = new Text();
+
+    private Button leftGenomeDisplayButton = new Button("DISPLAY DOMINANT GENOME");
+    private Button rightGenomeDisplayButton = new Button("DISPLAY DOMINANT GENOME");
+
+    private Text leftRightClickGenome = new Text();
+    private Text rightRightClickGenome = new Text();
+
     ////////////////////////////////////////////////////////////////////////////
 
     int width = 15;
@@ -170,7 +178,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         leftMap = new UnBoundedWorldMap(width, height, jungleRatio);
         leftMapEngine = new SimulationEngine(startingEnergy, moveEnergy, plantEnergy, numberOfAnimals,
                 isMagicLeft , leftMap);
-        gridPaneLeft = createGridPane(leftMap,gridPaneLeft);
+        gridPaneLeft = createGridPane(leftMap,gridPaneLeft,false, null);
         leftMapEngine.setMoveDelay(refreshTime);
         leftMapEngine.addSimulationObserver(app());
         leftAnimalTracker = leftMapEngine.getAnimalTracker();
@@ -180,7 +188,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         rightMap = new BoundedWorldMap(width,height,jungleRatio);
         rightMapEngine = new SimulationEngine(startingEnergy, moveEnergy, plantEnergy, numberOfAnimals,
                 isMagicRight , rightMap);
-        gridPaneRight = createGridPane(rightMap,gridPaneRight);
+        gridPaneRight = createGridPane(rightMap,gridPaneRight,false, null);
         rightMapEngine.setMoveDelay(refreshTime);
         rightMapEngine.addSimulationObserver(app());
         rightAnimalTracker = rightMapEngine.getAnimalTracker();
@@ -261,6 +269,8 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         statsAndTrackContainer.getChildren().add(leftTrackerDayOfDeath);
         statsAndTrackContainer.getChildren().add(leftTrackerNumberOfChildren);
         statsAndTrackContainer.getChildren().add(leftTrackerNumberOfAnimalsDescendans);
+        statsAndTrackContainer.getChildren().add(leftGenomeDisplayButton);
+        statsAndTrackContainer.getChildren().add(leftRightClickGenome);
         animalGrassEnergyContainer.getChildren().add(leftLineEnergyChart);
         animalGrassEnergyContainer.getChildren().add(leftLineChartAnimalsGrass);
         childrenLifeSpanContainer.getChildren().add(leftLineChildrenChart);
@@ -288,6 +298,8 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         statsAndTrackContainer.getChildren().add(rightTrackerDayOfDeath);
         statsAndTrackContainer.getChildren().add(rightTrackerNumberOfChildren);
         statsAndTrackContainer.getChildren().add(rightTrackerNumberOfAnimalsDescendans);
+        statsAndTrackContainer.getChildren().add(rightGenomeDisplayButton);
+        statsAndTrackContainer.getChildren().add(rightRightClickGenome);
         animalGrassEnergyContainer.getChildren().add(rightLineEnergyChart);
         animalGrassEnergyContainer.getChildren().add(rightLineChartAnimalsGrass);
         childrenLifeSpanContainer.getChildren().add(rightLineChildrenChart);
@@ -296,7 +308,8 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     }
 
 
-    public GridPane createGridPane(BoundedWorldMap map, GridPane gridPane){
+    public GridPane createGridPane(BoundedWorldMap map, GridPane gridPane, boolean isDisplayDominantGenomeMode,
+                                   int[] dominantGenes){
         gridPane.getColumnConstraints().clear();
         gridPane.getRowConstraints().clear();
         gridPane.getChildren().clear();
@@ -327,12 +340,6 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         }
 
         Map<Vector2d, MapField> hashMap = map.getActiveMapFields();
-        /*for(Vector2d position : hashMap.keySet()){
-            MapField field = hashMap.get(position);
-            Label label = new Label(field.toString());
-            gridPane.add(label, position.getX(), position.getY());
-            gridPane.setHalignment(label, HPos.CENTER);
-        }*/
 
         for(int i = 0; i < map.getWidth(); i++)
             for(int j = 0; j < map.getHeight(); j++) {
@@ -344,8 +351,19 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
                     imageView.setFitWidth(imageWidth);
                     imageView.setFitHeight(imageHeight);
                     gridPane.add(imageView, position.getX(), position.getY());
-                } else {
+                }
+
+                else {
                     Image image = imageHolder.getImage("src/main/resources/sawannagrass.png");
+                    ImageView imageView = new ImageView(image);
+                    imageView.setFitWidth(imageWidth);
+                    imageView.setFitHeight(imageHeight);
+                    gridPane.add(imageView, position.getX(), position.getY());
+                }
+
+                if(isDisplayDominantGenomeMode && hashMap.get(position) != null)
+                    if (hashMap.get(position).containsGenome(dominantGenes)){
+                    Image image = imageHolder.getImage("src/main/resources/selected.png");
                     ImageView imageView = new ImageView(image);
                     imageView.setFitWidth(imageWidth);
                     imageView.setFitHeight(imageHeight);
@@ -371,21 +389,40 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         pane.setOnMouseClicked(e -> {
             try {
                 Vector2d position = new Vector2d(col, row);
-                if (map.equals(rightMap)) {
-                    if (map.getActiveMapFields().get(position).containAnimals()) {
-                        rightAnimalTracker.newTrackedAnimal(map.getActiveMapFields().get(position).getFirst());
-                        System.out.println("tracking animal at:" + position);
+                if(e.getButton() == MouseButton.PRIMARY) {
+                    if (map.equals(rightMap)) {
+                        if (map.getActiveMapFields().get(position).containAnimals()) {
+                            rightAnimalTracker.newTrackedAnimal(map.getActiveMapFields().get(position).getFirst());
+                            System.out.println("tracking animal at:" + position);
+                        }
+                    } else {
+                        if (map.getActiveMapFields().get(position).containAnimals()) {
+                            leftAnimalTracker.newTrackedAnimal(map.getActiveMapFields().get(position).getFirst());
+                            System.out.println("tracking animal at:" + position);
+                        }
                     }
-                } else {
-                    if (map.getActiveMapFields().get(position).containAnimals()) {
-                        leftAnimalTracker.newTrackedAnimal(map.getActiveMapFields().get(position).getFirst());
-                        System.out.println("tracking animal at:" + position);
+                }
+
+                if(e.getButton() == MouseButton.SECONDARY){
+                    if (map.equals(rightMap)) {
+                        if (map.getActiveMapFields().get(position).containAnimals()) {
+                            rightRightClickGenome.setText(Arrays.toString(map.getActiveMapFields().get(position)
+                                    .getFirst().getGenes()));
+                            rightRightClickGenome.setWrappingWidth(simulationWidth/6);
+                        }
+                    } else {
+                        if (map.getActiveMapFields().get(position).containAnimals()) {
+                            leftRightClickGenome.setText(Arrays.toString(map.getActiveMapFields().get(position)
+                                    .getFirst().getGenes()));
+                            leftRightClickGenome.setWrappingWidth(simulationWidth/6);
+                        }
                     }
                 }
             }catch(Exception ex){
                 System.out.println("tracking problem");
             }
         });
+
         gridPane.add(pane, col, row);
     }
 
@@ -394,13 +431,15 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         Platform.runLater(() -> {
             leftDominantGenes.setText(Arrays.toString(leftMapEngine.getTracker().findDominantGenes()));
             leftDominantGenes.setWrappingWidth(simulationWidth/6);
-            gridPaneLeft = createGridPane(this.leftMap, gridPaneLeft);
+            gridPaneLeft = createGridPane(this.leftMap, gridPaneLeft, false,
+                    null);
             updateChartsValue(leftSeriesEnergy, leftSeriesAnimals, leftSeriesGrass ,
                     leftSeriesLiveSpan, leftSeriesChildren, leftMapEngine.getTracker());
 
             rightDominantGenes.setText(Arrays.toString(rightMapEngine.getTracker().findDominantGenes()));
             rightDominantGenes.setWrappingWidth(simulationWidth/6);
-            gridPaneRight = createGridPane(this.rightMap, gridPaneRight);
+            gridPaneRight = createGridPane(this.rightMap, gridPaneRight ,false,
+                    null);
             updateChartsValue(rightSeriesEnergy, rightSeriesAnimals, rightSeriesGrass, rightSeriesLiveSpan,
                     rightSeriesChildren, rightMapEngine.getTracker());
             updateTrackedData();
@@ -549,6 +588,14 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         }catch(IllegalThreadStateException ex){
             out.printf("PROCES JUZ WYSTARTOWAL");
         }
+        leftGenomeDisplayButton.setOnAction((new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                gridPaneLeft = createGridPane(leftMap, gridPaneLeft ,true,
+                        leftMapEngine.getTracker().findDominantGenes());
+            }
+        }));
+
     }
 
     public void rightButtonHandle(){
@@ -569,6 +616,14 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         }catch(IllegalThreadStateException ex){
             out.printf("PROCES JUZ WYSTARTOWAL");
         }
+
+        rightGenomeDisplayButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                gridPaneRight = createGridPane(rightMap, gridPaneRight ,true,
+                        rightMapEngine.getTracker().findDominantGenes());
+            }
+        });
     }
 
 

@@ -23,6 +23,7 @@ public class ImageHolder {
         add("src/main/resources/grass.png");
         add("src/main/resources/junglegrass.png");
         add("src/main/resources/sawannagrass.png");
+        add("src/main/resources/selected.png");
     }
 
     private void add(String fileName){

@@ -9,6 +9,7 @@ public class AnimalTracker {
     private int livedDays;
     private int daysFromStart;
     private int descendetNumber;
+    private int childNumber;
     public AnimalTracker(){
         daysFromStart = 0;
     }
@@ -17,6 +18,7 @@ public class AnimalTracker {
         trackedAnimal = animal;
         animal.setAnimalAsOriginallyTrackedAnimal();
         descendetNumber = 0;
+        childNumber = 0;
         dead = false;
     }
 
@@ -24,11 +26,14 @@ public class AnimalTracker {
         if(descendentCandidate.isDescendentOfTracked())
             descendetNumber++;
 
+        if(descendentCandidate.isFirstLineChild()){
+            childNumber++;
+        }
     }
 
     public int trackedAnimalChildren()
     {
-        return trackedAnimal.getNumberOfChildren();
+        return childNumber;
     }
 
     public int trackedAnimalDescendants(){
