@@ -114,6 +114,7 @@ public class MapField implements IPositionChangeObserver,IMapElement{
                         secondParent.getEnergy()*0.25), childGenes);
         addAnimal(child);
         notifyAboutBorn(child);
+        child.addParents(firstParent,secondParent);
         firstParent.decreaseEnergy((int) (firstParent.getEnergy()*0.25));
         secondParent.decreaseEnergy((int) (secondParent.getEnergy()*0.25));
         firstParent.newChild();

@@ -1,7 +1,6 @@
 package agh.ics.oop;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static java.lang.System.out;
@@ -21,11 +20,13 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
     private List<Animal> animals;
     private List<IUpdateAnimalsSimulation> updateAnimals;
     private  DataTracker dataTracker;
+    private  AnimalTracker animalTracker;
 
     public SimulationEngine(Integer startingEnergy, Integer moveEnergy, Integer plantEnergy,
                             Integer initialNumberOfAnimals, boolean isMagic,
                             BoundedWorldMap map){
         this.map = map;
+        animalTracker = new AnimalTracker();
         this.updateAnimals = new ArrayList<>();
         if(initialNumberOfAnimals > map.getWidth() * map.getHeight()) {
             System.out.println("PRZEKROCZONO MAX ZWIERZAT");
@@ -89,6 +90,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
                 for (Animal animal : animals) {
                     animal.decreaseEnergy(moveEnergy);
                     animal.anotherDayLived();
+                    animalTracker.newDay();
                 }
                 System.out.println(this);
                 System.out.println(map.getGrassAmount());
@@ -111,6 +113,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
 
     @Override
     public void animalBorn(Animal animal) {
+        animalTracker.checkIfAnimalIsDescendent(animal);
         animals.add(animal);
         if(animals.size() == 5 && isMagic)
             magicStateEnable();
@@ -118,6 +121,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
 
     @Override
     public void animalDied(Animal animal) {
+        animalTracker.checkifTrackedAnimalDied(animal);
         dataTracker.animalDied(animal);
         animals.remove(animal);
         if(animals.size() == 5 && isMagic)
@@ -168,5 +172,9 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
 
     public DataTracker getTracker(){
         return dataTracker;
+    }
+
+    public AnimalTracker getAnimalTracker(){
+        return animalTracker;
     }
 }

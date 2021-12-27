@@ -13,19 +13,28 @@ public class AnimalTracker {
     }
 
 
-    public void addTrackedAnimal(Animal animal){
+    public void newTrackedAnimal(Animal animal){
         trackedAnimal = animal;
         dead = false;
         descendantSet.clear();
-        descendantSet.add(animal);
+        descendantSet.add(trackedAnimal);
     }
 
-    public void checkIfAnimalIsDescendent(){
-
+    public void checkIfAnimalIsDescendent(Animal descendentCandidate){
+        Animal parent1 = descendentCandidate.getParent1();
+        Animal parent2 =  descendentCandidate.getParent2();
+        if( parent1 == null || parent2 == null)
+            return;
+        if(descendantSet.contains(parent1) || descendantSet.contains(parent2))
+            descendantSet.add(descendentCandidate);
     }
 
     public int trackedAnimalChildren(){
         return trackedAnimal.getNumberOfChildren();
+    }
+
+    public int trackedAnimalDescendants(){
+        return descendantSet.size() - 1;
     }
 
     public Integer getDayOfDeath(){
@@ -34,5 +43,12 @@ public class AnimalTracker {
         return null;
     }
 
+    public void newDay(){
+        daysFromStart++;
+    }
 
+    public void checkifTrackedAnimalDied(Animal animal) {
+        if(animal == trackedAnimal)
+            dead = true;
+    }
 }

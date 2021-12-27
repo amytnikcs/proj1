@@ -17,8 +17,12 @@ public class Animal implements IMapElement{
     private MapDirection orientation;
     private int livedDays;
     private int numberOfChildren;
+    private Animal parent1;
+    private Animal parent2;
 
     public Animal(IWorldMap map, Vector2d initialPosition, Integer energy, int[] genes){
+        parent1 = null;
+        parent2 = null;
         numberOfChildren = 0;
         livedDays = 1;
         positions = new ArrayList<>();
@@ -163,4 +167,15 @@ public class Animal implements IMapElement{
 
     public int[] getGenes(){return this.genes;}
 
+    public void addParents(Animal parent1, Animal parent2){
+        this.parent1 = parent1;
+        this.parent2 = parent2;
+    }
+    public Animal getParent1(){
+        return parent1;
+    }
+
+    public Animal getParent2(){
+        return parent2;
+    }
 }
