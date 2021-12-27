@@ -13,6 +13,8 @@ import javafx.scene.chart.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
@@ -229,16 +231,17 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
 
     public GridPane createGridPane(BoundedWorldMap map, GridPane gridPane){
-        gridPane.setGridLinesVisible(false); //https://stackoverflow.com/questions/11147788/
         gridPane.getColumnConstraints().clear();
         gridPane.getRowConstraints().clear();
         gridPane.getChildren().clear();
-        gridPane.setGridLinesVisible(true);
+
 
         int widthForGridpane = simulationWidth / 2;
         int heightForGridpane = (simulationHeight * 3) / 5;
         int colWidth = (widthForGridpane) / map.getWidth();
         int rowHeight = (heightForGridpane) / map.getHeight();
+        int imageWidth = (widthForGridpane)/(map.getWidth());
+        int imageHeight = (heightForGridpane)/(map.getHeight());
 
         gridPane.setMaxWidth (widthForGridpane);
         gridPane.setPrefWidth(widthForGridpane);
@@ -248,7 +251,6 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         ColumnConstraints colConstraint= new ColumnConstraints(colWidth);
         RowConstraints rowConstraint = new RowConstraints(rowHeight);
 
-        gridPane.setGridLinesVisible(true);
 
         for(int i = 0; i < map.getWidth(); i++){
             gridPane.getColumnConstraints().add(colConstraint);
@@ -259,12 +261,40 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         }
 
         Map<Vector2d, MapField> hashMap = map.getActiveMapFields();
-        for(Vector2d position : hashMap.keySet()){
+        /*for(Vector2d position : hashMap.keySet()){
             MapField field = hashMap.get(position);
             Label label = new Label(field.toString());
             gridPane.add(label, position.getX(), position.getY());
             gridPane.setHalignment(label, HPos.CENTER);
-        }
+        }*/
+
+        for(int i = 0; i < map.getWidth(); i++)
+            for(int j = 0; j < map.getHeight(); j++) {
+                Vector2d position = new Vector2d(i, j);
+
+                if (map.inJungle(position)) {
+                    Image image = imageHolder.getImage("src/main/resources/junglegrass.png");
+                    ImageView imageView = new ImageView(image);
+                    imageView.setFitWidth(imageWidth);
+                    imageView.setFitHeight(imageHeight);
+                    gridPane.add(imageView, position.getX(), position.getY());
+                } else {
+                    Image image = imageHolder.getImage("src/main/resources/sawannagrass.png");
+                    ImageView imageView = new ImageView(image);
+                    imageView.setFitWidth(imageWidth);
+                    imageView.setFitHeight(imageHeight);
+                    gridPane.add(imageView, position.getX(), position.getY());
+                }
+
+                if(hashMap.get(position) != null) {
+                    Image image = imageHolder.getImage(hashMap.get(position).showTypeOfImage());
+                    ImageView imageView = new ImageView(image);
+                    imageView.setFitWidth(imageWidth);
+                    imageView.setFitHeight(imageHeight);
+                    gridPane.add(imageView, position.getX(), position.getY());
+                }
+
+            }
 
         return gridPane;
     }
@@ -297,14 +327,14 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
         inputMenuName.setFont(new Font(MAX_FONT_SIZE));
 
-        widthTextField = new formTextField("width:","15");
-        heightTextField = new formTextField("height:","15");
+        widthTextField = new formTextField("width:","35");
+        heightTextField = new formTextField("height:","35");
         jungleRatioTextField = new formTextField("jungle ratio:","0.5");
 
         startEnergyTextField = new formTextField("start energy:","100");
-        moveEnergyTextField = new formTextField("move energy:","10");
+        moveEnergyTextField = new formTextField("move energy:","5");
         plantEnergyTextField = new formTextField("plant energy:","100");
-        numberOfAnimalsTextField = new formTextField("initial number of animals:","30");
+        numberOfAnimalsTextField = new formTextField("initial number of animals:","250");
         refreshTimeTextField = new formTextField("refresh time(ms):","300");
 
         inputLeftCheckBox.getChildren().add(inputLeftMapIsMagicLabel);
