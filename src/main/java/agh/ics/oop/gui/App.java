@@ -17,8 +17,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import static java.lang.System.out;
@@ -65,34 +67,46 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     private Thread engineThreadForLeftMap;
     private Thread engineThreadForRightMap;
 
+    private Button leftThreadStopStart = new Button("STOP");
+    private boolean leftThreadRunning = true;
+
+    private Button rightThreadStopStart = new Button("STOP");
+    private boolean rightThreadRunning = true;
+
     private GridPane gridPaneLeft;
     private GridPane gridPaneRight;
 
     private int simulationWidth = 1200;
     private int simulationHeight = 750;
 
-
+    private Label leftMapTitle = new Label("Wrapped Map");
+    private Text leftDominantGenes = new Text();
     private LineChart leftLineChartAnimalsGrass;
     private XYChart.Series leftSeriesAnimals = new XYChart.Series();
     private XYChart.Series leftSeriesGrass = new XYChart.Series();
 
+    private Label rightMapTitle = new Label("Map with wall");
+    private Text rightDominantGenes = new Text();
     private LineChart rightLineChartAnimalsGrass;
     private XYChart.Series rightSeriesAnimals = new XYChart.Series();
     private XYChart.Series rightSeriesGrass = new XYChart.Series();
 
     private LineChart leftLineChildrenChart;
     private LineChart leftLineLifeSpanChart;
+    private LineChart leftLineEnergyChart;
     private XYChart.Series leftSeriesEnergy = new XYChart.Series();
     private XYChart.Series leftSeriesLiveSpan = new XYChart.Series();
     private XYChart.Series leftSeriesChildren = new XYChart.Series();
 
     private LineChart rightLineChildrenChart;
     private LineChart rightLineLifeSpanChart;
+    private LineChart rightLineEnergyChart;
     private XYChart.Series rightSeriesEnergy = new XYChart.Series();
     private XYChart.Series rightSeriesLiveSpan = new XYChart.Series();
     private XYChart.Series rightSeriesChildren = new XYChart.Series();
 
     private HBox windowSimulation;
+    private Scene simulationScene;
     ////////////////////////////////////////////////////////////////////////////
 
     int width = 15;
@@ -178,15 +192,60 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         refreshTime = Integer.parseInt(refreshTimeTextField.getTextField().getText());
     }
 
+
+
+    public void leftButtonHandle(){
+        try {
+            leftThreadStopStart.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    if(leftThreadRunning) {
+                        leftThreadRunning = false;
+                        engineThreadForLeftMap.suspend();
+                    }
+                    else {
+                        leftThreadRunning = true;
+                        engineThreadForLeftMap.resume();
+                    }
+                }
+            });
+        }catch(IllegalThreadStateException ex){
+            out.printf("PROCES JUZ WYSTARTOWAL");
+        }
+    }
+
+    public void rightButtonHandle(){
+        try {
+            rightThreadStopStart.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    if(rightThreadRunning){
+                        rightThreadRunning = false;
+                        engineThreadForRightMap.suspend();
+                    }
+                    else {
+                        rightThreadRunning = true;
+                        engineThreadForRightMap.resume();
+                    }
+                }
+            });
+        }catch(IllegalThreadStateException ex){
+            out.printf("PROCES JUZ WYSTARTOWAL");
+        }
+    }
+
     public void showApplicationScreen(){
         createSimulationGUI();
         primaryStage.setTitle("Simulation window");
-        Scene scene = new Scene(windowSimulation, simulationWidth + 30, simulationHeight + 20);
-        primaryStage.setScene(scene);
+        simulationScene = new Scene(windowSimulation, simulationWidth + 40, simulationHeight + 25);
+        primaryStage.setScene(simulationScene);
         primaryStage.show();
+
     }
 
     public void createSimulationGUI(){
+        leftButtonHandle();
+        rightButtonHandle();
         windowSimulation = new HBox(10);
         windowSimulation.setMaxWidth(simulationWidth + 200);
         windowSimulation.setMaxHeight(simulationHeight + 20);
@@ -197,35 +256,53 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
     public VBox createLeftSide(){
         VBox verticalContainer = new VBox();
+        HBox boxForStartStopTitle = new HBox();
         HBox horizontalContainer = new HBox(5);
         VBox childrenLifeSpanContainer = new VBox();
+        VBox animalGrassEnergyContainer = new VBox();
+        VBox statsAndTrackContainer = new VBox();
+        verticalContainer.getChildren().add(boxForStartStopTitle);
         verticalContainer.setMaxHeight(simulationHeight);
-        gridPaneLeft = createGridPane(this.leftMap, gridPaneLeft);
         verticalContainer.getChildren().add(gridPaneLeft);
         verticalContainer.getChildren().add(horizontalContainer);
-        horizontalContainer.getChildren().add(leftLineChartAnimalsGrass);
+        horizontalContainer.getChildren().add(statsAndTrackContainer);
         horizontalContainer.getChildren().add(childrenLifeSpanContainer);
+        horizontalContainer.getChildren().add(animalGrassEnergyContainer);
+        boxForStartStopTitle.getChildren().add(leftMapTitle);
+        boxForStartStopTitle.getChildren().add(leftThreadStopStart);
+        statsAndTrackContainer.getChildren().add(leftDominantGenes);
+        animalGrassEnergyContainer.getChildren().add(leftLineEnergyChart);
+        animalGrassEnergyContainer.getChildren().add(leftLineChartAnimalsGrass);
         childrenLifeSpanContainer.getChildren().add(leftLineChildrenChart);
         childrenLifeSpanContainer.getChildren().add(leftLineLifeSpanChart);
-        updateAnimalGrassChart(leftSeriesEnergy, leftSeriesAnimals, leftSeriesGrass ,
-                leftSeriesLiveSpan, leftSeriesChildren, leftMapEngine.getTracker());
+        leftDominantGenes.setText(Arrays.toString(leftMapEngine.getTracker().findDominantGenes()));
+        leftDominantGenes.setWrappingWidth(simulationWidth/6);
         return verticalContainer;
     }
 
     public VBox createRightSide(){
         VBox verticalContainer = new VBox();
+        HBox boxForStartStopTitle = new HBox();
         HBox horizontalContainer = new HBox(5);
         VBox childrenLifeSpanContainer = new VBox();
+        VBox animalGrassEnergyContainer = new VBox();
+        VBox statsAndTrackContainer = new VBox();
+        verticalContainer.getChildren().add(boxForStartStopTitle);
         verticalContainer.setMaxHeight(simulationHeight);
-        gridPaneRight = createGridPane(this.rightMap, gridPaneRight);
         verticalContainer.getChildren().add(gridPaneRight);
         verticalContainer.getChildren().add(horizontalContainer);
-        horizontalContainer.getChildren().add(rightLineChartAnimalsGrass);
+        horizontalContainer.getChildren().add(animalGrassEnergyContainer);
         horizontalContainer.getChildren().add(childrenLifeSpanContainer);
+        horizontalContainer.getChildren().add(statsAndTrackContainer);
+        boxForStartStopTitle.getChildren().add(rightMapTitle);
+        boxForStartStopTitle.getChildren().add(rightThreadStopStart);
+        statsAndTrackContainer.getChildren().add(rightDominantGenes);
+        animalGrassEnergyContainer.getChildren().add(rightLineEnergyChart);
+        animalGrassEnergyContainer.getChildren().add(rightLineChartAnimalsGrass);
         childrenLifeSpanContainer.getChildren().add(rightLineChildrenChart);
         childrenLifeSpanContainer.getChildren().add(rightLineLifeSpanChart);
-        updateAnimalGrassChart(rightSeriesEnergy, rightSeriesAnimals, rightSeriesGrass, rightSeriesLiveSpan,
-                rightSeriesChildren, rightMapEngine.getTracker());
+        rightDominantGenes.setText(Arrays.toString(rightMapEngine.getTracker().findDominantGenes()));
+        rightDominantGenes.setWrappingWidth(simulationWidth/6);
         return verticalContainer;
     }
 
@@ -302,7 +379,12 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     @Override
     public void animalsUpdate() {
         Platform.runLater(() -> {
-            showApplicationScreen();
+            gridPaneLeft = createGridPane(this.leftMap, gridPaneLeft);
+            updateAnimalGrassChart(leftSeriesEnergy, leftSeriesAnimals, leftSeriesGrass ,
+                    leftSeriesLiveSpan, leftSeriesChildren, leftMapEngine.getTracker());
+            gridPaneRight = createGridPane(this.rightMap, gridPaneRight);
+            updateAnimalGrassChart(rightSeriesEnergy, rightSeriesAnimals, rightSeriesGrass, rightSeriesLiveSpan,
+                    rightSeriesChildren, rightMapEngine.getTracker());
         });
     }
 
@@ -327,14 +409,14 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
         inputMenuName.setFont(new Font(MAX_FONT_SIZE));
 
-        widthTextField = new formTextField("width:","35");
-        heightTextField = new formTextField("height:","35");
+        widthTextField = new formTextField("width:","25");
+        heightTextField = new formTextField("height:","25");
         jungleRatioTextField = new formTextField("jungle ratio:","0.5");
 
         startEnergyTextField = new formTextField("start energy:","100");
         moveEnergyTextField = new formTextField("move energy:","5");
         plantEnergyTextField = new formTextField("plant energy:","100");
-        numberOfAnimalsTextField = new formTextField("initial number of animals:","250");
+        numberOfAnimalsTextField = new formTextField("initial number of animals:","40");
         refreshTimeTextField = new formTextField("refresh time(ms):","300");
 
         inputLeftCheckBox.getChildren().add(inputLeftMapIsMagicLabel);
@@ -365,32 +447,41 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     }
 
     private void chartsInit() {
-        leftLineChartAnimalsGrass = createAnimalGrassLineChart(leftLineChartAnimalsGrass, leftSeriesAnimals,
-                leftSeriesEnergy, leftSeriesGrass);
+        leftLineChartAnimalsGrass = createAnimalGrassLineChart(leftSeriesAnimals, leftSeriesGrass);
 
-        rightLineChartAnimalsGrass = createAnimalGrassLineChart(rightLineChartAnimalsGrass, rightSeriesAnimals,
-                rightSeriesEnergy, rightSeriesGrass);
+        leftLineChildrenChart = createSingleLineChart(leftSeriesChildren, "Number of days",
+                "Avg animal children number","Animal avg children","avg children");
 
-        leftLineChildrenChart = createChildrenLineChart(leftLineChildrenChart, leftSeriesChildren);
-        leftLineLifeSpanChart = createLifeSpanChart(leftLineLifeSpanChart, leftSeriesLiveSpan);
+        leftLineLifeSpanChart = createSingleLineChart(leftSeriesLiveSpan,"Number of days",
+                "Avg animal life span","Animal avg life span", "avg lifeSpan");
 
-        rightLineChildrenChart = createChildrenLineChart(rightLineChildrenChart, rightSeriesChildren);
-        rightLineLifeSpanChart = createLifeSpanChart(rightLineLifeSpanChart, rightSeriesLiveSpan);
+        leftLineEnergyChart = createSingleLineChart(leftSeriesEnergy, "Number of days",
+                "Avg energy", "Animal average energy", "average energy");
+
+        rightLineChartAnimalsGrass = createAnimalGrassLineChart(rightSeriesAnimals, rightSeriesGrass);
+
+        rightLineChildrenChart =createSingleLineChart(rightSeriesChildren, "Number of days",
+                "Avg animal children number","Animal avg children","avg children");
+
+        rightLineLifeSpanChart = createSingleLineChart(rightSeriesLiveSpan,"Number of days",
+                "Avg animal life span","Animal avg life span", "avg lifeSpan");
+
+        rightLineEnergyChart = createSingleLineChart(rightSeriesEnergy, "Number of days",
+                "Avg energy", "Animal average energy", "average energy");
     }
 
-    public LineChart createAnimalGrassLineChart(LineChart lineChart , XYChart.Series animals, XYChart.Series seriesEnergy, XYChart.Series grass){
+    public LineChart createAnimalGrassLineChart(XYChart.Series animals, XYChart.Series grass){
         NumberAxis xAxis = new NumberAxis();
         NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Number of days");
-        yAxis.setLabel("Number of animals/grass/energy");
+        yAxis.setLabel("Number of animals/grass");
         animals.setName("animals");
         grass.setName("grass");
-        seriesEnergy.setName("average animals energy");
-        lineChart = new LineChart<Number,Number>(xAxis,yAxis);
-        lineChart.setTitle("animals/grass/energy");
+        LineChart<Number,Number> lineChart = new LineChart<Number,Number>(xAxis,yAxis);
+        lineChart.setTitle("animals/grass");
         lineChart.setPrefWidth(simulationWidth / 6);
         lineChart.setMaxWidth(simulationWidth / 6);
-        lineChart.getData().addAll(animals, grass, seriesEnergy);
+        lineChart.getData().addAll(animals, grass);
         lineChart.setCreateSymbols(false);
         return lineChart;
     }
@@ -405,33 +496,18 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
     }
 
-    public LineChart createChildrenLineChart(LineChart lineChart,XYChart.Series children){
+    public LineChart createSingleLineChart(XYChart.Series series, String xAxisName, String yAxisName,
+                                           String seriesName, String title){
         NumberAxis xAxis = new NumberAxis();
         NumberAxis yAxis = new NumberAxis();
-        xAxis.setLabel("Number of days");
-        yAxis.setLabel("Avg animal children number");
-        children.setName("Animal avg children");
-        lineChart = new LineChart<Number,Number>(xAxis,yAxis);
-        lineChart.setTitle("avg children");
-
+        xAxis.setLabel(xAxisName);
+        yAxis.setLabel(yAxisName);
+        series.setName(seriesName);
+        LineChart<Number,Number> lineChart = new LineChart<Number,Number>(xAxis,yAxis);
+        lineChart.setTitle(title);
         lineChart.setPrefWidth(simulationWidth / 6);
         lineChart.setMaxWidth(simulationWidth / 6);
-        lineChart.getData().addAll(children);
-        lineChart.setCreateSymbols(false);
-        return lineChart;
-    }
-
-    public LineChart createLifeSpanChart(LineChart lineChart,XYChart.Series lifeSpan){
-        NumberAxis xAxis = new NumberAxis();
-        NumberAxis yAxis = new NumberAxis();
-        xAxis.setLabel("Number of days");
-        yAxis.setLabel("Avg animal life span");
-        lifeSpan.setName("Animal avg life span");
-        lineChart = new LineChart<Number,Number>(xAxis,yAxis);
-        lineChart.setTitle("avg lifeSpan");
-        lineChart.setPrefWidth(simulationWidth / 6);
-        lineChart.setMaxWidth(simulationWidth / 6);
-        lineChart.getData().addAll(lifeSpan);
+        lineChart.getData().addAll(series);
         lineChart.setCreateSymbols(false);
         return lineChart;
     }

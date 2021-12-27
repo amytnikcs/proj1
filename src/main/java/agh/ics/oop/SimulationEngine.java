@@ -100,7 +100,7 @@ public class SimulationEngine implements IAnimalLifeCycleObserver, Runnable{
                 }
                 System.out.println(this);
                 System.out.println(map.getGrassAmount());
-                System.out.println(map.toString());
+                //System.out.println(map.toString());
                 try {
                     Thread.sleep(moveDelay);
                 } catch (InterruptedException e) {
