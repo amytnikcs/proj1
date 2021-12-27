@@ -5,7 +5,6 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -275,8 +274,6 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         animalGrassEnergyContainer.getChildren().add(leftLineChartAnimalsGrass);
         childrenLifeSpanContainer.getChildren().add(leftLineChildrenChart);
         childrenLifeSpanContainer.getChildren().add(leftLineLifeSpanChart);
-        leftDominantGenes.setText(Arrays.toString(leftMapEngine.getTracker().findDominantGenes()));
-        leftDominantGenes.setWrappingWidth(simulationWidth/6);
         return verticalContainer;
     }
 
@@ -301,8 +298,6 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         animalGrassEnergyContainer.getChildren().add(rightLineChartAnimalsGrass);
         childrenLifeSpanContainer.getChildren().add(rightLineChildrenChart);
         childrenLifeSpanContainer.getChildren().add(rightLineLifeSpanChart);
-        rightDominantGenes.setText(Arrays.toString(rightMapEngine.getTracker().findDominantGenes()));
-        rightDominantGenes.setWrappingWidth(simulationWidth/6);
         return verticalContainer;
     }
 
@@ -317,7 +312,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         int heightForGridpane = (simulationHeight * 3) / 5;
         int colWidth = (widthForGridpane) / map.getWidth();
         int rowHeight = (heightForGridpane) / map.getHeight();
-        int imageWidth = (widthForGridpane)/(map.getWidth());
+        int imageWidth = ((widthForGridpane)/(map.getWidth()));
         int imageHeight = (heightForGridpane)/(map.getHeight());
 
         gridPane.setMaxWidth (widthForGridpane);
@@ -369,6 +364,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
                     imageView.setFitWidth(imageWidth);
                     imageView.setFitHeight(imageHeight);
                     gridPane.add(imageView, position.getX(), position.getY());
+                    addPane(gridPane, position.getX(), position.getY());
                 }
 
             }
@@ -376,14 +372,27 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         return gridPane;
     }
 
+    private void addPane(GridPane gridPane, int col, int row) {
+        Pane pane = new Pane();
+        pane.setOnMouseClicked(e -> {
+            System.out.printf("Mouse clicked at cell [%d, %d]%n", col, row);
+        });
+        gridPane.add(pane, col, row);
+    }
+
     @Override
     public void animalsUpdate() {
         Platform.runLater(() -> {
+            leftDominantGenes.setText(Arrays.toString(leftMapEngine.getTracker().findDominantGenes()));
+            leftDominantGenes.setWrappingWidth(simulationWidth/6);
             gridPaneLeft = createGridPane(this.leftMap, gridPaneLeft);
-            updateAnimalGrassChart(leftSeriesEnergy, leftSeriesAnimals, leftSeriesGrass ,
+            updateChartsValue(leftSeriesEnergy, leftSeriesAnimals, leftSeriesGrass ,
                     leftSeriesLiveSpan, leftSeriesChildren, leftMapEngine.getTracker());
+
+            rightDominantGenes.setText(Arrays.toString(rightMapEngine.getTracker().findDominantGenes()));
+            rightDominantGenes.setWrappingWidth(simulationWidth/6);
             gridPaneRight = createGridPane(this.rightMap, gridPaneRight);
-            updateAnimalGrassChart(rightSeriesEnergy, rightSeriesAnimals, rightSeriesGrass, rightSeriesLiveSpan,
+            updateChartsValue(rightSeriesEnergy, rightSeriesAnimals, rightSeriesGrass, rightSeriesLiveSpan,
                     rightSeriesChildren, rightMapEngine.getTracker());
         });
     }
@@ -486,8 +495,8 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         return lineChart;
     }
 
-    public void updateAnimalGrassChart(XYChart.Series energy,XYChart.Series animals,XYChart.Series grass,
-                                       XYChart.Series liveSpan, XYChart.Series children, DataTracker tracker){
+    public void updateChartsValue(XYChart.Series energy, XYChart.Series animals, XYChart.Series grass,
+                                  XYChart.Series liveSpan, XYChart.Series children, DataTracker tracker){
         animals.getData().add(new XYChart.Data(tracker.daysPassed(), tracker.numberOfAnimals()));
         grass.getData().add(new XYChart.Data(tracker.daysPassed(), tracker.getHowMuchGrassOnMap()));
         energy.getData().add(new XYChart.Data(tracker.daysPassed(), tracker.calculateAverageEnergy()));
