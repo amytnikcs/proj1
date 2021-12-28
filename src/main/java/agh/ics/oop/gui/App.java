@@ -162,7 +162,6 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     double rightaverageLifeSpan = 0;
     double rightaverageChildrenForLivingAnimals = 0;
 
-
     private Scene scene;
     @Override
     public void start(Stage primaryStage) throws Exception {
