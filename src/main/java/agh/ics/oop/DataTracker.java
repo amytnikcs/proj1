@@ -20,8 +20,6 @@ public class DataTracker {
         numberOfDeadAnimals = 0;
     }
 
-
-
     public double calculateAverageChildren(){
         double sum = 0;
         if(engine.getAnimals().size() == 0)

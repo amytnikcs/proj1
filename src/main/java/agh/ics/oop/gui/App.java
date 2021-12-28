@@ -21,6 +21,9 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -68,17 +71,19 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     private Thread engineThreadForLeftMap;
     private Thread engineThreadForRightMap;
 
-    private Button leftThreadStopStart = new Button("STOP");
+    private String leftThreadStopStartText = "STOP/START";
+    private Button leftThreadStopStart = new Button(leftThreadStopStartText);
     private boolean leftThreadRunning = true;
 
-    private Button rightThreadStopStart = new Button("STOP");
+    private String rightThreadStopStartText = "STOP/START";
+    private Button rightThreadStopStart = new Button(rightThreadStopStartText);
     private boolean rightThreadRunning = true;
 
     private GridPane gridPaneLeft;
     private GridPane gridPaneRight;
 
-    private int simulationWidth = 1200;
-    private int simulationHeight = 750;
+    private int simulationWidth = 1220;
+    private int simulationHeight = 770;
 
     private Label leftMapTitle = new Label("Wrapped Map");
     private Text leftDominantGenes = new Text();
@@ -126,6 +131,9 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     private Text leftRightClickGenome = new Text();
     private Text rightRightClickGenome = new Text();
 
+    private PrintWriter leftprintWriter;
+    private PrintWriter rightprintWriter;
+
     ////////////////////////////////////////////////////////////////////////////
 
     int width = 15;
@@ -139,6 +147,21 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     int numberOfAnimals = 30;
     int refreshTime = 30;
     private ImageHolder imageHolder;
+
+    int leftnumberOfRecords = 0;
+    double leftaverageAnimalsNumber = 0;
+    double leftaveragePlantNumber = 0;
+    double leftaverageEnergy = 0;
+    double leftaverageLifeSpan = 0;
+    double leftaverageChildrenForLivingAnimals = 0;
+
+    int rightnumberOfRecords = 0;
+    double rightaverageAnimalsNumber = 0;
+    double rightaveragePlantNumber = 0;
+    double rightaverageEnergy = 0;
+    double rightaverageLifeSpan = 0;
+    double rightaverageChildrenForLivingAnimals = 0;
+
 
     private Scene scene;
     @Override
@@ -174,6 +197,11 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     }
 
     private void simulationInit(){
+        initializeFile();
+        leftGenomeDisplayButton.setDisable(true);
+        rightGenomeDisplayButton.setDisable(true);
+
+
         gridPaneLeft = new GridPane();
         leftMap = new UnBoundedWorldMap(width, height, jungleRatio);
         leftMapEngine = new SimulationEngine(startingEnergy, moveEnergy, plantEnergy, numberOfAnimals,
@@ -234,6 +262,16 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         primaryStage.setTitle("Simulation window");
         simulationScene = new Scene(windowSimulation, simulationWidth + 40, simulationHeight + 25);
         primaryStage.setScene(simulationScene);
+        primaryStage.setOnCloseRequest(event -> {
+            String stringleft = (leftaverageAnimalsNumber+","+leftaveragePlantNumber+","+leftaverageEnergy+","+
+                    leftaverageLifeSpan+","+leftaverageChildrenForLivingAnimals);
+            String stringright = (rightaverageAnimalsNumber+","+rightaveragePlantNumber+","+rightaverageEnergy+","+
+                    rightaverageLifeSpan+","+ rightaverageChildrenForLivingAnimals);
+            leftprintWriter.println(stringleft);
+            leftprintWriter.close();
+            rightprintWriter.println(stringright);
+            rightprintWriter.close();
+        });
         primaryStage.show();
 
     }
@@ -242,8 +280,8 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         leftButtonHandle();
         rightButtonHandle();
         windowSimulation = new HBox(10);
-        windowSimulation.setMaxWidth(simulationWidth + 200);
-        windowSimulation.setMaxHeight(simulationHeight + 20);
+        windowSimulation.setMaxWidth(simulationWidth + 210);
+        windowSimulation.setMaxHeight(simulationHeight + 40);
         windowSimulation.setPadding(new Insets(10,10,10,10));
         windowSimulation.getChildren().add(createLeftSide());
         windowSimulation.getChildren().add(createRightSide());
@@ -265,11 +303,17 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         horizontalContainer.getChildren().add(animalGrassEnergyContainer);
         boxForStartStopTitle.getChildren().add(leftMapTitle);
         boxForStartStopTitle.getChildren().add(leftThreadStopStart);
+        statsAndTrackContainer.getChildren().add(new Label("dominant genes:"));
         statsAndTrackContainer.getChildren().add(leftDominantGenes);
-        statsAndTrackContainer.getChildren().add(leftTrackerDayOfDeath);
-        statsAndTrackContainer.getChildren().add(leftTrackerNumberOfChildren);
-        statsAndTrackContainer.getChildren().add(leftTrackerNumberOfAnimalsDescendans);
         statsAndTrackContainer.getChildren().add(leftGenomeDisplayButton);
+        statsAndTrackContainer.getChildren().add(new Label("left click animal to track it."));
+        statsAndTrackContainer.getChildren().add(new Label("day of death:"));
+        statsAndTrackContainer.getChildren().add(leftTrackerDayOfDeath);
+        statsAndTrackContainer.getChildren().add(new Label("number of children:"));
+        statsAndTrackContainer.getChildren().add(leftTrackerNumberOfChildren);
+        statsAndTrackContainer.getChildren().add(new Label("number of descendans:"));
+        statsAndTrackContainer.getChildren().add(leftTrackerNumberOfAnimalsDescendans);
+        statsAndTrackContainer.getChildren().add(new Label("right click animal to show its genome:"));
         statsAndTrackContainer.getChildren().add(leftRightClickGenome);
         animalGrassEnergyContainer.getChildren().add(leftLineEnergyChart);
         animalGrassEnergyContainer.getChildren().add(leftLineChartAnimalsGrass);
@@ -294,11 +338,17 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         horizontalContainer.getChildren().add(statsAndTrackContainer);
         boxForStartStopTitle.getChildren().add(rightMapTitle);
         boxForStartStopTitle.getChildren().add(rightThreadStopStart);
+        statsAndTrackContainer.getChildren().add(new Label("dominant genes:"));
         statsAndTrackContainer.getChildren().add(rightDominantGenes);
-        statsAndTrackContainer.getChildren().add(rightTrackerDayOfDeath);
-        statsAndTrackContainer.getChildren().add(rightTrackerNumberOfChildren);
-        statsAndTrackContainer.getChildren().add(rightTrackerNumberOfAnimalsDescendans);
         statsAndTrackContainer.getChildren().add(rightGenomeDisplayButton);
+        statsAndTrackContainer.getChildren().add(new Label("left click animal to track it."));
+        statsAndTrackContainer.getChildren().add(new Label("day of death:"));
+        statsAndTrackContainer.getChildren().add(rightTrackerDayOfDeath);
+        statsAndTrackContainer.getChildren().add(new Label("number of children:"));
+        statsAndTrackContainer.getChildren().add(rightTrackerNumberOfChildren);
+        statsAndTrackContainer.getChildren().add(new Label("number of descendans:"));
+        statsAndTrackContainer.getChildren().add(rightTrackerNumberOfAnimalsDescendans);
+        statsAndTrackContainer.getChildren().add(new Label("right click animal to show its genome:"));
         statsAndTrackContainer.getChildren().add(rightRightClickGenome);
         animalGrassEnergyContainer.getChildren().add(rightLineEnergyChart);
         animalGrassEnergyContainer.getChildren().add(rightLineChartAnimalsGrass);
@@ -391,12 +441,12 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
                 Vector2d position = new Vector2d(col, row);
                 if(e.getButton() == MouseButton.PRIMARY) {
                     if (map.equals(rightMap)) {
-                        if (map.getActiveMapFields().get(position).containAnimals()) {
+                        if (map.getActiveMapFields().get(position).containAnimals() && !rightThreadRunning) {
                             rightAnimalTracker.newTrackedAnimal(map.getActiveMapFields().get(position).getFirst());
                             System.out.println("tracking animal at:" + position);
                         }
                     } else {
-                        if (map.getActiveMapFields().get(position).containAnimals()) {
+                        if (map.getActiveMapFields().get(position).containAnimals() && !leftThreadRunning) {
                             leftAnimalTracker.newTrackedAnimal(map.getActiveMapFields().get(position).getFirst());
                             System.out.println("tracking animal at:" + position);
                         }
@@ -405,13 +455,13 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
 
                 if(e.getButton() == MouseButton.SECONDARY){
                     if (map.equals(rightMap)) {
-                        if (map.getActiveMapFields().get(position).containAnimals()) {
+                        if (map.getActiveMapFields().get(position).containAnimals() && !rightThreadRunning) {
                             rightRightClickGenome.setText(Arrays.toString(map.getActiveMapFields().get(position)
                                     .getFirst().getGenes()));
                             rightRightClickGenome.setWrappingWidth(simulationWidth/6);
                         }
                     } else {
-                        if (map.getActiveMapFields().get(position).containAnimals()) {
+                        if (map.getActiveMapFields().get(position).containAnimals() && !leftThreadRunning) {
                             leftRightClickGenome.setText(Arrays.toString(map.getActiveMapFields().get(position)
                                     .getFirst().getGenes()));
                             leftRightClickGenome.setWrappingWidth(simulationWidth/6);
@@ -435,6 +485,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
                     null);
             updateChartsValue(leftSeriesEnergy, leftSeriesAnimals, leftSeriesGrass ,
                     leftSeriesLiveSpan, leftSeriesChildren, leftMapEngine.getTracker());
+            updateStats(leftMapEngine.getTracker(), true);
 
             rightDominantGenes.setText(Arrays.toString(rightMapEngine.getTracker().findDominantGenes()));
             rightDominantGenes.setWrappingWidth(simulationWidth/6);
@@ -442,6 +493,7 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
                     null);
             updateChartsValue(rightSeriesEnergy, rightSeriesAnimals, rightSeriesGrass, rightSeriesLiveSpan,
                     rightSeriesChildren, rightMapEngine.getTracker());
+            updateStats(rightMapEngine.getTracker(), false);
             updateTrackedData();
         });
     }
@@ -551,7 +603,38 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
         energy.getData().add(new XYChart.Data(tracker.daysPassed(), tracker.calculateAverageEnergy()));
         liveSpan.getData().add(new XYChart.Data(tracker.daysPassed(), tracker.getAverageAnimalLiveSpan()));
         children.getData().add(new XYChart.Data(tracker.daysPassed(), tracker.calculateAverageChildren()));
+    }
 
+    private void updateStats(DataTracker tracker, boolean isSideLeft){
+        if(isSideLeft){
+            leftnumberOfRecords++;
+            leftaverageAnimalsNumber = (leftaverageAnimalsNumber*(leftnumberOfRecords - 1) + tracker.numberOfAnimals())/leftnumberOfRecords;
+            leftaverageEnergy  = (leftaverageEnergy*(leftnumberOfRecords - 1) + tracker.calculateAverageEnergy())/leftnumberOfRecords;
+            leftaveragePlantNumber = (leftaveragePlantNumber*(leftnumberOfRecords - 1) + tracker.getHowMuchGrassOnMap())/leftnumberOfRecords;
+            leftaverageLifeSpan = (leftaverageLifeSpan*(leftnumberOfRecords - 1) + tracker.getAverageAnimalLiveSpan())/leftnumberOfRecords;
+            leftaverageChildrenForLivingAnimals = (leftaverageChildrenForLivingAnimals
+                    *(leftnumberOfRecords - 1) + tracker.calculateAverageChildren())/leftnumberOfRecords;
+            String string = (tracker.numberOfAnimals() +","+ tracker.getHowMuchGrassOnMap()
+                    +","+tracker.calculateAverageEnergy()+","+tracker.getAverageAnimalLiveSpan()+","+
+                    tracker.calculateAverageChildren());
+
+            leftprintWriter.println(string);
+        }
+
+        else{
+            rightnumberOfRecords++;
+            rightaverageAnimalsNumber = (rightaverageAnimalsNumber*(rightnumberOfRecords - 1) + tracker.numberOfAnimals())/rightnumberOfRecords;
+            rightaverageEnergy  = (rightaverageEnergy*(rightnumberOfRecords - 1) + tracker.calculateAverageEnergy())/rightnumberOfRecords;
+            rightaveragePlantNumber = (rightaveragePlantNumber*(rightnumberOfRecords - 1) + tracker.getHowMuchGrassOnMap())/rightnumberOfRecords;
+            rightaverageLifeSpan = (rightaverageLifeSpan*(rightnumberOfRecords - 1) + tracker.getAverageAnimalLiveSpan())/rightnumberOfRecords;
+            rightaverageChildrenForLivingAnimals = (rightaverageChildrenForLivingAnimals
+                    *(rightnumberOfRecords - 1) + tracker.calculateAverageChildren())/rightnumberOfRecords;
+            String string = (tracker.numberOfAnimals() +","+ tracker.getHowMuchGrassOnMap()
+                    +","+tracker.calculateAverageEnergy()+","+tracker.getAverageAnimalLiveSpan()+","+
+                    tracker.calculateAverageChildren());
+
+            rightprintWriter.println(string);
+        }
     }
 
     public LineChart createSingleLineChart(XYChart.Series series, String xAxisName, String yAxisName,
@@ -578,10 +661,12 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
                     if(leftThreadRunning) {
                         leftThreadRunning = false;
                         engineThreadForLeftMap.suspend();
+                        leftGenomeDisplayButton.setDisable(false);
                     }
                     else {
                         leftThreadRunning = true;
                         engineThreadForLeftMap.resume();
+                        leftGenomeDisplayButton.setDisable(true);
                     }
                 }
             });
@@ -606,10 +691,12 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
                     if(rightThreadRunning){
                         rightThreadRunning = false;
                         engineThreadForRightMap.suspend();
+                        rightGenomeDisplayButton.setDisable(false);
                     }
                     else {
                         rightThreadRunning = true;
                         engineThreadForRightMap.resume();
+                        rightGenomeDisplayButton.setDisable(true);
                     }
                 }
             });
@@ -627,20 +714,19 @@ public class App extends Application implements  IUpdateAnimalsSimulation{
     }
 
 
+    public void initializeFile(){
+        try {
+            String string = "animalsNumber,plantNumber,averageEnergy,averageLifeSpan,averageChildrenLifeSpan";
+            leftprintWriter = new PrintWriter("statisticsLeft.csv","UTF-8");
+            leftprintWriter.println(string);
 
-        /*public void disableOptionsEdition(){
-        widthTextField.getHBox().setDisable(true);
-        heightTextField.getHBox().setDisable(true);
-        jungleRatioTextField.getHBox().setDisable(true);
-        startEnergyTextField.getHBox().setDisable(true);
-        moveEnergyTextField.getHBox().setDisable(true);
-        plantEnergyTextField.getHBox().setDisable(true);
-        initialNumberOfAnimalsTextField.getHBox().setDisable(true);
-        initialRefreshTimeTextField.getHBox().setDisable(true);
+            rightprintWriter = new PrintWriter("statisticsRight.csv","UTF-8");
+            rightprintWriter.println(string);
 
-        inputLeftMapIsMagic.setDisable(true);
-        inputRightMapIsMagic.setDisable(true);
-        startSimulationButton.setVisible(false);
-    }*/
-
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
 }

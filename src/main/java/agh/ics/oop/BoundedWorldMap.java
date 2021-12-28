@@ -8,7 +8,7 @@ import static java.lang.Math.sqrt;
 public class BoundedWorldMap implements IWorldMap, IPositionChangeObserver, IAnimalLifeCycleObserver, IGrassEatenObserver {
 
     protected Map<Vector2d, MapField> activeMapFields = new ConcurrentHashMap<>();
-    protected Set<Vector2d> freeJungleFields = new HashSet<Vector2d>(); 
+    protected Set<Vector2d> freeJungleFields = new HashSet<Vector2d>();
     protected Set<Vector2d> freeSawannaFields = new HashSet<Vector2d>();
     protected List<IAnimalLifeCycleObserver> animalLifeCycleObservers;
 
@@ -55,9 +55,14 @@ public class BoundedWorldMap implements IWorldMap, IPositionChangeObserver, IAni
         centreX = this.width / 2;
         centreY = this.height / 2;
         areaPart = partOfArea();
-        jungleWidth = (int) (this.width * sqrt(jungleRatio));//trzeba to zmienic bo nie dziala ugułem ale zeby isc dalej jest
-        jungleHeight = (int) (this.height * sqrt(jungleRatio));
-        jungleTopCornerX = centreX + jungleWidth / 2;
+        double squaresinjungle = width*height*partOfArea();
+        jungleWidth = (int) Math.ceil(sqrt(squaresinjungle));
+        jungleHeight = (int) Math.floor(sqrt(squaresinjungle));
+
+        if(jungleWidth % 2 == 0)
+            jungleTopCornerX = centreX + jungleWidth / 2 - 1;
+        else
+            jungleTopCornerX = centreX + jungleWidth/2;
         jungleTopCornerY = centreY + jungleHeight / 2;
         jungleBottomCornerX = centreX - jungleWidth / 2;
         jungleBottomCornerY = centreY - jungleHeight / 2;
